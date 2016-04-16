@@ -10,6 +10,7 @@ use skeeks\cms\base\Component;
 
 use skeeks\cms\helpers\StringHelper;
 use Yii;
+use yii\base\BootstrapInterface;
 use yii\base\Event;
 use yii\helpers\ArrayHelper;
 use yii\web\View;
@@ -19,7 +20,7 @@ use yii\widgets\ActiveForm;
  * Class CmsSeoComponent
  * @package skeeks\cms\seo
  */
-class CmsSeoComponent extends Component
+class CmsSeoComponent extends Component implements BootstrapInterface
 {
     /**
      * Можно задать название и описание компонента
@@ -137,12 +138,8 @@ class CmsSeoComponent extends Component
 
     }
 
-
-
-    public function init()
+    public function bootstrap($application)
     {
-        parent::init();
-
         if (!$this->enableKeywordsGenerator)
         {
             return $this;
@@ -157,7 +154,6 @@ class CmsSeoComponent extends Component
             }
         });
     }
-
 
     public function generateBeforeOutputPage(\yii\web\View $view)
     {
