@@ -1,0 +1,27 @@
+{
+	"name": "skeeks/cms-seo",
+	"description": "Component seo for SkeekS CMS",
+	"keywords": ["yii", "skeeks", "framework", "component", "seo"],
+    "homepage": "http://cms.skeeks.com/",
+	"type": "yii2-extension",
+	"license": "BSD-3-Clause",
+	"support": {
+        "issues": "http://skeeks.com/",
+        "wiki": "http://en.cms.skeeks.com/docs/",
+        "source": "https://github.com/skeeks-cms/cms-seo"
+    },
+	"authors": [
+		{
+			"name": "Semenov Alexander",
+			"email": "semenov@skeeks.com"
+		}
+	],
+	"require": {
+		"skeeks/cms": "*"
+	},
+    "autoload": {
+        "psr-4": {
+            "skeeks\\cms\\seo\\": ""
+        }
+    }
+}
