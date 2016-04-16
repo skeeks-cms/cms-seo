@@ -8,18 +8,10 @@
 namespace skeeks\cms\seo;
 use skeeks\cms\base\Component;
 
-use skeeks\cms\base\components\Descriptor;
-use skeeks\cms\base\Module;
 use skeeks\cms\helpers\StringHelper;
-use skeeks\cms\models\Site;
-use skeeks\cms\models\StorageFile;
-use skeeks\cms\models\Tree;
-use skeeks\cms\models\TreeType;
-use skeeks\cms\models\User;
 use Yii;
 use yii\base\Event;
 use yii\helpers\ArrayHelper;
-use yii\web\UploadedFile;
 use yii\web\View;
 use yii\widgets\ActiveForm;
 
@@ -103,11 +95,21 @@ class CmsSeoComponent extends Component
     public function attributeLabels()
     {
         return ArrayHelper::merge(parent::attributeLabels(), [
-            'enableKeywordsGenerator'                => 'Автоматическая генерация ключевых слов',
-            'minKeywordLenth'                        => 'Минимальная длина ключевого слова',
-            'maxKeywordsLength'                      => 'Длинна ключевых слов',
-            'robotsContent'                          => 'Robots.txt файл',
-            'countersContent'                        => 'Коды счетчиков',
+            'enableKeywordsGenerator'                => \Yii::t('skeeks/seo', 'Automatic generation of keywords'),
+            'minKeywordLenth'                        => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
+            'maxKeywordsLength'                      => \Yii::t('skeeks/seo', 'Length keywords'),
+            'robotsContent'                          => 'Robots.txt',
+            'countersContent'                        => \Yii::t('skeeks/seo', 'Codes counters'),
+        ]);
+    }
+
+    public function attributeHints()
+    {
+        return ArrayHelper::merge(parent::attributeHints(), [
+            'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
+            'minKeywordLenth' => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
+            'maxKeywordsLength' => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
+            'robotsContent' => \Yii::t('skeeks/seo', 'This value is added to the automatically generated file robots.txt, in the case where it is not physically created on the server'),
         ]);
     }
 
@@ -115,10 +117,24 @@ class CmsSeoComponent extends Component
 
     public function renderConfigForm(ActiveForm $form)
     {
-        echo \Yii::$app->view->renderFile(__DIR__ . '/seo/_form.php', [
-            'form'  => $form,
-            'model' => $this
-        ], $this);
+        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Keywords'));
+
+            echo $form->field($this, 'enableKeywordsGenerator')->checkbox(\Yii::$app->formatter->booleanFormat);
+
+            echo $form->field($this, 'minKeywordLenth');
+            echo $form->field($this, 'maxKeywordsLength');
+
+
+        echo $form->fieldSetEnd();
+
+        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Indexing'));
+            echo $form->field($this, 'robotsContent')->textarea(['rows' => 7]);
+        echo $form->fieldSetEnd();
+
+        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Codes counters'));
+            echo $form->field($this, 'countersContent')->textarea(['rows' => 20]);
+        echo $form->fieldSetEnd();
+
     }
 
 

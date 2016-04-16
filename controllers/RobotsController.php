@@ -12,6 +12,7 @@ use skeeks\cms\seo\models\CmsContentElement;
 use skeeks\cms\seo\models\CmsSearchPhrase;
 use skeeks\cms\models\Tree;
 use Yii;
+use yii\web\Controller;
 use yii\web\Response;
 
 /**
@@ -23,7 +24,7 @@ class RobotsController extends Controller
     /**
      * @return string
      */
-    public function actionIndex()
+    public function actionOnRequest()
     {
         echo \Yii::$app->seo->robotsContent;
         \Yii::$app->response->format = Response::FORMAT_RAW;

@@ -22,11 +22,13 @@ return [
             ]
         ],
 
-        /*'urlManager' => [
+        'urlManager' => [
             'rules' => [
-                'search'                                => 'cmsSearch/result',
+                'robots.txt'                  => '/seo/robots/on-request',
+                'sitemap.xml'                 => '/seo/sitemap/on-request',
+
             ]
-        ]*/
+        ]
     ],
 
     'modules' =>
