@@ -2,9 +2,9 @@
 	"name": "skeeks/cms-seo",
 	"description": "Component seo for SkeekS CMS",
 	"keywords": ["yii", "skeeks", "framework", "component", "seo"],
-    "homepage": "http://cms.skeeks.com/",
+    	"homepage": "http://cms.skeeks.com/",
 	"type": "yii2-extension",
-	"license": "BSD-3-Clause",
+	"license": "GPL-3.0+",
 	"support": {
         "issues": "http://skeeks.com/",
         "wiki": "http://en.cms.skeeks.com/docs/",
