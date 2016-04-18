@@ -23,12 +23,14 @@ Configuration app
 
 ```php
 
+'bootstrap' => ['seo'],
+
 'components' =>
 [
-    'cmsSeo' => [
+    'seo' => [
         'class'     => 'skeeks\cms\seo\CmsSeoComponent',
     ],
-    
+
     'i18n' => [
         'translations' =>
         [
@@ -41,13 +43,19 @@ Configuration app
             ]
         ]
     ],
+
+    'urlManager' => [
+        'rules' => [
+            'robots.txt'                  => '/seo/robots/on-request',
+            'sitemap.xml'                 => '/seo/sitemap/on-request',
+        ]
+    ]
 ],
 
 'modules' =>
 [
-    'cmsSeo' => [
-        'class'         => 'skeeks\cms\seo\CmsSearchModule',
-        "controllerNamespace"       => 'skeeks\cms\seo\console\controllers'
+    'seo' => [
+        'class'         => 'skeeks\cms\seo\CmsSeoModule',
     ]
 ]
 

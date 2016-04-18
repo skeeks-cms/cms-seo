@@ -26,7 +26,6 @@ return [
             'rules' => [
                 'robots.txt'                  => '/seo/robots/on-request',
                 'sitemap.xml'                 => '/seo/sitemap/on-request',
-
             ]
         ]
     ],
@@ -37,5 +36,4 @@ return [
             'class'         => 'skeeks\cms\seo\CmsSeoModule',
         ]
     ]
-
 ];

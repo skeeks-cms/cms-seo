@@ -7,11 +7,11 @@
  */
 namespace skeeks\cms\seo\controllers;
 
-use skeeks\cms\base\Controller;
 use skeeks\cms\models\CmsContentElement;
 use skeeks\cms\models\Tree;
 use Yii;
 use yii\helpers\Url;
+use yii\web\Controller;
 use yii\web\Response;
 
 /**
