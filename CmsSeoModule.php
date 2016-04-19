@@ -10,7 +10,7 @@ namespace skeeks\cms\seo;
  * Class CmsSeoModule
  * @package skeeks\cms\seo
  */
-class CmsSeoModule extends \yii\web\Module
+class CmsSeoModule extends \yii\base\Module
 {
     public $controllerNamespace = 'skeeks\cms\seo\controllers';
 }
