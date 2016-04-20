@@ -73,7 +73,7 @@ class SitemapController extends Controller
         }
 
         $result[] = [
-            'loc' => Url::to(['/skeeks-cms'])
+            'loc' => Url::to(['/skeeks-cms'], true)
         ];
 
         \Yii::$app->response->format = Response::FORMAT_XML;
