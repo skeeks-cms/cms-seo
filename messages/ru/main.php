@@ -1,6 +1,8 @@
 <?php
 return [
-    'Keywords' => 'Ключевые слова',
+    'Seo'       => 'Seo',
+    'Settings'  => 'Настройки',
+    'Keywords'  => 'Ключевые слова',
     'Indexing' => 'Индексация',
     'Codes counters' => 'Коды счетчиков',
     'Automatic generation of keywords' => 'Автоматическая генерация ключевых слов',
