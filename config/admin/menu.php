@@ -26,6 +26,11 @@ return
                             return (bool) (\Yii::$app->request->getUrl() == $adminMenuItem->getUrl());
                         },
                     ],
+                    [
+                        "label" => \Yii::t('app', "Sitemap"),
+                        "url"   => ["seo/admin-sitemap-task"],
+                        "img"       => ['\skeeks\cms\modules\admin\assets\AdminAsset', 'images/icons/settings-big.png'],
+                    ],
                 ],
             ],
         ]
