@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+1.0.1
+-----------------
+  * Tree absolute url
+
 1.0.0
 -----------------
   * Stable release

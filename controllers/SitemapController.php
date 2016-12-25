@@ -36,11 +36,11 @@ class SitemapController extends Controller
              */
             foreach ($trees as $tree)
             {
-                if (!$tree->redirect)
+                if (!$tree->redirect && !$tree->redirect_tree_id)
                 {
                     $result[] =
                     [
-                        "loc"           => $tree->url,
+                        "loc"           => $tree->absoluteUrl,
                         "lastmod"       => $this->_lastMod($tree),
                         //"priority"      => $this->_calculatePriority($tree),
                         //"changefreq"    => "daily",
