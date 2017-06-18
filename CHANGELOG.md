@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.0.0-beta
+-----------------
+  * Fixed errors
+  
 2.0.0-alpha
 -----------------
   * SkeekS CMS v4

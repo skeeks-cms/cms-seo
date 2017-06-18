@@ -27,7 +27,7 @@ class SitemapController extends Controller
     {
         ini_set("memory_limit","512M");
 
-        $trees = Tree::find()->where(['site_code' => \Yii::$app->cms->site->code])->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->all();
+        $trees = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id])->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->all();
 
         if ($trees)
         {
@@ -51,7 +51,7 @@ class SitemapController extends Controller
 
         $elements = CmsContentElement::find()
                     ->joinWith('cmsTree')
-                    ->andWhere([Tree::tableName() . '.site_code' => \Yii::$app->cms->site->code])
+                    ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id])
                     ->orderBy(['updated_at' => SORT_DESC, 'priority' => SORT_ASC])
                     ->all();
         //Добавление элементов в карту
