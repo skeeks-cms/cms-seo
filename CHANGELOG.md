@@ -1,6 +1,11 @@
 CHANGELOG
 ==============
 
+2.0.0
+-----------------
+  * Add registerLinkTags
+  * Add canonicalPageParams
+  
 2.0.0-beta
 -----------------
   * Fixed errors

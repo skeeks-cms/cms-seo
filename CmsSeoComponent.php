@@ -13,6 +13,7 @@ use Yii;
 use yii\base\BootstrapInterface;
 use yii\base\Event;
 use yii\helpers\ArrayHelper;
+use yii\web\Application;
 use yii\web\View;
 use yii\widgets\ActiveForm;
 
@@ -84,6 +85,18 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         //"strong"    =>  2,
     ];
 
+    /**
+     * Добавлять тег канноникал для постраничной навигации
+     * @var array
+     */
+    public $canonicalPageParams = ['page'];
+
+    /**
+     * В виджетах ListView registerLinkTags = true по умолчанию
+     * @var bool
+     */
+    public $registerLinkTags = true;
+
     public function rules()
     {
         return ArrayHelper::merge(parent::rules(), [
@@ -140,17 +153,44 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     public function bootstrap($application)
     {
-        if (!$this->enableKeywordsGenerator)
-        {
-            return $this;
-        }
 
         /**
          * Генерация SEO метатегов.
          * */
         \Yii::$app->view->on(View::EVENT_END_PAGE, function (Event $e) {
-            if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
-                $this->generateBeforeOutputPage($e->sender);
+            if ($this->enableKeywordsGenerator)
+            {
+                if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
+                    $this->generateBeforeOutputPage($e->sender);
+                }
+            }
+
+        });
+
+        /**
+         * Добавление канноникал для постранички
+         */
+        \Yii::$app->on(Application::EVENT_BEFORE_REQUEST, function (Event $e) {
+
+            if ($this->canonicalPageParams && is_array($this->canonicalPageParams))
+            {
+                foreach ($this->canonicalPageParams as $paramName)
+                {
+                    if (\Yii::$app->request->get($paramName))
+                    {
+                        \Yii::$app->view->registerLinkTag(['rel' => 'canonical', 'href' => \Yii::$app->request->hostInfo . '/' . \Yii::$app->request->pathInfo]);
+                    }
+                }
+            }
+
+            if ($this->registerLinkTags)
+            {
+                \Yii::$container->set('yii\widgets\ListView', [
+                    'pager' =>
+                    [
+                        'registerLinkTags' => true
+                    ]
+                ]);
             }
         });
     }
