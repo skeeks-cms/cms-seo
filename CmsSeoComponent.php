@@ -6,6 +6,7 @@
  * @date 30.03.2015
  */
 namespace skeeks\cms\seo;
+use skeeks\cms\backend\BackendComponent;
 use skeeks\cms\base\Component;
 
 use skeeks\cms\helpers\StringHelper;
@@ -158,7 +159,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
          * Генерация SEO метатегов.
          * */
         \Yii::$app->view->on(View::EVENT_END_PAGE, function (Event $e) {
-            if ($this->enableKeywordsGenerator)
+            if ($this->enableKeywordsGenerator && !BackendComponent::getCurrent())
             {
                 if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
                     $this->generateBeforeOutputPage($e->sender);
