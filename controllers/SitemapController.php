@@ -27,6 +27,42 @@ class SitemapController extends Controller
     {
         ini_set("memory_limit","512M");
 
+        $result = [];
+
+        $this->_addTrees($result);
+        $this->_addElements($result);
+        $this->_addAdditional($result);
+
+        \Yii::$app->response->format = Response::FORMAT_XML;
+        $this->layout                = false;
+
+        //Генерация sitemap вручную, не используем XmlResponseFormatter
+        \Yii::$app->response->content =  $this->render($this->action->id, [
+            'data' => $result
+        ]);
+
+        return;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addAdditional(&$data = [])
+    {
+        $data[] = [
+            'loc' => Url::to(['/cms/cms/index'], true)
+        ];
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addTrees(&$data = [])
+    {
         $trees = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id])->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->all();
 
         if ($trees)
@@ -38,22 +74,30 @@ class SitemapController extends Controller
             {
                 if (!$tree->redirect && !$tree->redirect_tree_id)
                 {
-                    $result[] =
+                    $data[] =
                     [
                         "loc"           => $tree->absoluteUrl,
                         "lastmod"       => $this->_lastMod($tree),
-                        //"priority"      => $this->_calculatePriority($tree),
-                        //"changefreq"    => "daily",
                     ];
                 }
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addElements(&$data = [])
+    {
         $elements = CmsContentElement::find()
                     ->joinWith('cmsTree')
                     ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id])
                     ->orderBy(['updated_at' => SORT_DESC, 'priority' => SORT_ASC])
                     ->all();
+
         //Добавление элементов в карту
         if ($elements)
         {
@@ -62,29 +106,15 @@ class SitemapController extends Controller
              */
             foreach ($elements as $model)
             {
-                $result[] =
+                $data[] =
                 [
                     "loc"           => $model->absoluteUrl,
                     "lastmod"       => $this->_lastMod($model),
-                    //"priority"      => "0.3",
-                    //"changefreq"    => "daily",
                 ];
             }
         }
 
-        $result[] = [
-            'loc' => Url::to(['/skeeks-cms'], true)
-        ];
-
-        \Yii::$app->response->format = Response::FORMAT_XML;
-        $this->layout                = false;
-
-        //Генерация sitemap вручную, не используем XmlResponseFormatter
-        \Yii::$app->response->content =  $this->render($this->action->id, [
-            'data' => $result
-        ]);
-
-        return;
+        return $this;
     }
 
     /**
