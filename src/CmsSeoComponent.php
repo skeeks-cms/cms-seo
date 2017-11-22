@@ -48,25 +48,26 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      */
     public $robotsContent = "User-agent: *";
     /**
+     * Содержимое счетчиков
      * @var string
      */
     public $countersContent = "";
     /**
      * @var string
      */
-    public $activeTree = true; //Содержимое счетчиков
+    public $activeTree = true;
     /**
      * @var string
      */
-    public $activeContentElem = true; //Учитывать активность элемента
+    public $activeContentElem = true;
     /**
      * @var string
      */
-    public $contentIds = []; //Учитывать активность элемента
+    public $contentIds = [];
     /**
      * @var string
      */
-    public $treeTypeIds = []; //Учитывать следующие элементы контента
+    public $treeTypeIds = [];
     /**
      * @var array
      */
