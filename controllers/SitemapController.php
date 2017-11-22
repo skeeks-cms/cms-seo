@@ -9,6 +9,7 @@ namespace skeeks\cms\seo\controllers;
 
 use skeeks\cms\models\CmsContentElement;
 use skeeks\cms\models\Tree;
+use skeeks\cms\savedFilters\models\SavedFilters;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -32,6 +33,7 @@ class SitemapController extends Controller
         $this->_addTrees($result);
         $this->_addElements($result);
         $this->_addAdditional($result);
+        $this->_addSavedFilters($result);
 
         \Yii::$app->response->format = Response::FORMAT_XML;
         $this->layout                = false;
@@ -58,12 +60,40 @@ class SitemapController extends Controller
     }
 
     /**
+     *
+     * @param array $data
+     * @return $this
+     */
+    protected function _addSavedFilters(&$data = [])
+    {
+        $savedFilters = SavedFilters::find()->orderBy(['priority' => SORT_ASC])->all();
+
+        if ($savedFilters)
+        {
+            /**
+             * @var SavedFilters $savedFilter
+             */
+            foreach ($savedFilters as $savedFilter)
+            {
+
+                $data[] =
+                [
+                    "loc"           => Url::to([$savedFilter->url], true),
+                    "lastmod"       => $this->_lastMod($savedFilter),
+                ];
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * @param array $data
      * @return $this
      */
     protected function _addTrees(&$data = [])
     {
-        $trees = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id])->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->all();
+        $trees = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id])->andWhere(['active' => 'Y'])->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->all();
 
         if ($trees)
         {
@@ -95,6 +125,7 @@ class SitemapController extends Controller
         $elements = CmsContentElement::find()
                     ->joinWith('cmsTree')
                     ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id])
+                    ->andWhere([CmsContentElement::tableName().'.active' => 'Y'])
                     ->orderBy(['updated_at' => SORT_DESC, 'priority' => SORT_ASC])
                     ->all();
 
