@@ -5,6 +5,7 @@
  * @copyright 2010 SkeekS (СкикС)
  * @date 15.04.2016
  */
+
 namespace skeeks\cms\seo;
 /**
  * Class CmsSeoModule

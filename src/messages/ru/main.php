@@ -1,12 +1,12 @@
 <?php
 return [
-    'Seo'       => 'Seo',
-    'Settings'  => 'Настройки',
-    'Keywords'  => 'Ключевые слова',
+    'Seo' => 'Seo',
+    'Settings' => 'Настройки',
+    'Keywords' => 'Ключевые слова',
     'Indexing' => 'Индексация',
-    'Codes counters'    => 'Коды счетчиков',
-    'Sitemap settings'  => 'Карта сайта',
-    'Types of tree'     => 'Укажите типы разделов',
+    'Codes counters' => 'Коды счетчиков',
+    'Sitemap settings' => 'Карта сайта',
+    'Types of tree' => 'Укажите типы разделов',
     'Active flag to contents element' => 'Учитывать флаг активности для элементов контента',
     'Active flag to tree' => 'Учитывать флаг активности для разделов',
     'Automatic generation of keywords' => 'Автоматическая генерация ключевых слов',

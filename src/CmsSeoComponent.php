@@ -47,39 +47,39 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var string
      */
     public $robotsContent = "User-agent: *";
-/**
+    /**
      * @var string
      */
     public $countersContent = "";
-/**
+    /**
      * @var string
      */
     public $activeTree = true; //Содержимое счетчиков
-/**
+    /**
      * @var string
      */
     public $activeContentElem = true; //Учитывать активность элемента
-/**
+    /**
      * @var string
      */
     public $contentIds = []; //Учитывать активность элемента
-/**
+    /**
      * @var string
      */
     public $treeTypeIds = []; //Учитывать следующие элементы контента
     /**
      * @var array
      */
-    public $keywordsPriority =  [
-            "title" => 8,
-            "h1" => 6,
-            "h2" => 4,
-            "h3" => 3,
-            "h5" => 2,
-            "h6" => 2,
-            //"b"         =>  2,
-            //"strong"    =>  2,
-        ]; //Учитывать следующие типы разделов
+    public $keywordsPriority = [
+        "title" => 8,
+        "h1" => 6,
+        "h2" => 4,
+        "h3" => 3,
+        "h5" => 2,
+        "h6" => 2,
+        //"b"         =>  2,
+        //"strong"    =>  2,
+    ]; //Учитывать следующие типы разделов
     /**
      * Добавлять тег канноникал для постраничной навигации
      * @var array

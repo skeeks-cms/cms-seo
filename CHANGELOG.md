@@ -3,6 +3,7 @@ CHANGELOG
 
 2.1.1.pre
 -----------------
+ * Code style
  * Change src dir
  * Added upload settings for site map
 

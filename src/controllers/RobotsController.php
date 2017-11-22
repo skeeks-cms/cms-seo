@@ -5,13 +5,11 @@
  * @copyright 2010 SkeekS (СкикС)
  * @date 15.04.2016
  */
+
 namespace skeeks\cms\seo\controllers;
 
-use skeeks\cms\helpers\StringHelper;
 use skeeks\cms\seo\models\CmsContentElement;
 use skeeks\cms\seo\models\CmsSearchPhrase;
-use skeeks\cms\models\Tree;
-use Yii;
 use yii\web\Controller;
 use yii\web\Response;
 
