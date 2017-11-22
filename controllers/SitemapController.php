@@ -67,7 +67,7 @@ class SitemapController extends Controller
     {
         $query = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id]);
 
-        if (\Yii::$app->seo->activeTree)
+        if (\Yii::$app->seo->active_tree)
         {
             $query->andWhere(['active' => 'Y']);
         }
@@ -111,7 +111,7 @@ class SitemapController extends Controller
                     ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id]);
 
 
-        if (\Yii::$app->seo->activeContentElem)
+        if (\Yii::$app->seo->active_content_elem)
         {
             $query->andWhere([CmsContentElement::tableName().'.active' => 'Y']);
         }
