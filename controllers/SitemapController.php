@@ -5,15 +5,14 @@
  * @copyright 2010 SkeekS (СкикС)
  * @date 15.04.2016
  */
+
 namespace skeeks\cms\seo\controllers;
 
 use skeeks\cms\models\CmsContentElement;
 use skeeks\cms\models\Tree;
-use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\Response;
-use skeeks\cms\seo\CmsSeoComponent;
 
 /**
  * Class SitemapController
@@ -26,7 +25,7 @@ class SitemapController extends Controller
      */
     public function actionOnRequest()
     {
-        ini_set("memory_limit","512M");
+        ini_set("memory_limit", "512M");
 
         $result = [];
 
@@ -35,10 +34,10 @@ class SitemapController extends Controller
         $this->_addAdditional($result);
 
         \Yii::$app->response->format = Response::FORMAT_XML;
-        $this->layout                = false;
+        $this->layout = false;
 
         //Генерация sitemap вручную, не используем XmlResponseFormatter
-        \Yii::$app->response->content =  $this->render($this->action->id, [
+        \Yii::$app->response->content = $this->render($this->action->id, [
             'data' => $result
         ]);
 
@@ -49,93 +48,32 @@ class SitemapController extends Controller
      * @param array $data
      * @return $this
      */
-    protected function _addAdditional(&$data = [])
-    {
-        $data[] = [
-            'loc' => Url::to(['/cms/cms/index'], true)
-        ];
-
-        return $this;
-    }
-
-
-    /**
-     * @param array $data
-     * @return $this
-     */
     protected function _addTrees(&$data = [])
     {
         $query = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id]);
 
-        if (\Yii::$app->seo->activeTree)
-        {
+        if (\Yii::$app->seo->activeTree) {
             $query->andWhere(['active' => 'Y']);
         }
 
-        if (\Yii::$app->seo->tree_type_ids)
-        {
-            $query->andWhere(['tree_type_id' => \Yii::$app->seo->tree_type_ids]);
+        if (\Yii::$app->seo->treeTypeIds) {
+            $query->andWhere(['tree_type_id' => \Yii::$app->seo->treeTypeIds]);
         }
 
         $trees = $query->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->all();
 
-        if ($trees)
-        {
+        if ($trees) {
             /**
              * @var Tree $tree
              */
-            foreach ($trees as $tree)
-            {
-                if (!$tree->redirect && !$tree->redirect_tree_id)
-                {
+            foreach ($trees as $tree) {
+                if (!$tree->redirect && !$tree->redirect_tree_id) {
                     $data[] =
-                    [
-                        "loc"           => $tree->absoluteUrl,
-                        "lastmod"       => $this->_lastMod($tree),
-                    ];
+                        [
+                            "loc" => $tree->absoluteUrl,
+                            "lastmod" => $this->_lastMod($tree),
+                        ];
                 }
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param array $data
-     * @return $this
-     */
-    protected function _addElements(&$data = [])
-    {
-        $query = CmsContentElement::find()
-                    ->joinWith('cmsTree')
-                    ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id]);
-
-
-        if (\Yii::$app->seo->activeContentElem)
-        {
-            $query->andWhere([CmsContentElement::tableName().'.active' => 'Y']);
-        }
-
-        if (\Yii::$app->seo->content_ids)
-        {
-            $query->andWhere(['content_id' => \Yii::$app->seo->content_ids]);
-        }
-
-        $elements = $query->orderBy(['updated_at' => SORT_DESC, 'priority' => SORT_ASC])->all();
-
-        //Добавление элементов в карту
-        if ($elements)
-        {
-            /**
-             * @var CmsContentElement $model
-             */
-            foreach ($elements as $model)
-            {
-                $data[] =
-                [
-                    "loc"           => $model->absoluteUrl,
-                    "lastmod"       => $this->_lastMod($model),
-                ];
             }
         }
 
@@ -155,26 +93,72 @@ class SitemapController extends Controller
     }
 
     /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addElements(&$data = [])
+    {
+        $query = CmsContentElement::find()
+            ->joinWith('cmsTree')
+            ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id]);
+
+
+        if (\Yii::$app->seo->activeContentElem) {
+            $query->andWhere([CmsContentElement::tableName() . '.active' => 'Y']);
+        }
+
+        if (\Yii::$app->seo->contentIds) {
+            $query->andWhere(['content_id' => \Yii::$app->seo->contentIds]);
+        }
+
+        $elements = $query->orderBy(['updated_at' => SORT_DESC, 'priority' => SORT_ASC])->all();
+
+        //Добавление элементов в карту
+        if ($elements) {
+            /**
+             * @var CmsContentElement $model
+             */
+            foreach ($elements as $model) {
+                $data[] =
+                    [
+                        "loc" => $model->absoluteUrl,
+                        "lastmod" => $this->_lastMod($model),
+                    ];
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addAdditional(&$data = [])
+    {
+        $data[] = [
+            'loc' => Url::to(['/cms/cms/index'], true)
+        ];
+
+        return $this;
+    }
+
+    /**
      * @param Tree $model
      * @return string
      */
     private function _calculatePriority($model)
     {
         $priority = '0.4';
-        if ($model->level == 0)
-        {
+        if ($model->level == 0) {
             $priority = '1.0';
-        } else if($model->level == 1)
-        {
+        } else if ($model->level == 1) {
             $priority = '0.8';
-        } else if($model->level == 2)
-        {
+        } else if ($model->level == 2) {
             $priority = '0.7';
-        } else if($model->level == 3)
-        {
+        } else if ($model->level == 3) {
             $priority = '0.6';
-        } else if($model->level == 4)
-        {
+        } else if ($model->level == 4) {
             $priority = '0.5';
         }
 
