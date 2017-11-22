@@ -72,6 +72,30 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
 
     /**
+     * @var string
+     */
+    public $activeTree         = true; //Учитывать активность элемента
+
+
+    /**
+     * @var string
+     */
+    public $activeContentElem         = true; //Учитывать активность элемента
+
+
+    /**
+     * @var string
+     */
+    public $content_ids      = []; //Учитывать следующие элементы контента
+
+
+    /**
+     * @var string
+     */
+    public $tree_type_ids    = []; //Учитывать следующие типы разделов
+
+
+    /**
      * @var array
      */
     public $keywordsPriority =
@@ -101,9 +125,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function rules()
     {
         return ArrayHelper::merge(parent::rules(), [
-            [['enableKeywordsGenerator', 'minKeywordLenth', 'maxKeywordsLength'], 'integer'],
+            [['enableKeywordsGenerator', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree'], 'integer'],
             ['robotsContent', 'string'],
             ['countersContent', 'string'],
+            [['content_ids','tree_type_ids'], 'safe'],
         ]);
     }
 
@@ -115,6 +140,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'maxKeywordsLength'                      => \Yii::t('skeeks/seo', 'Length keywords'),
             'robotsContent'                          => 'Robots.txt',
             'countersContent'                        => \Yii::t('skeeks/seo', 'Codes counters'),
+            'activeTree'                             => \Yii::t('skeeks/seo','Active flag to tree'),
+            'activeContentElem'                      => \Yii::t('skeeks/seo','Active flag to contents element'),
+            'content_ids'                            => \Yii::t('skeeks/cms','Elements of content'),
+            'tree_type_ids'                          => \Yii::t('skeeks/seo','Types of tree'),
         ]);
     }
 
@@ -148,6 +177,20 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
         echo $form->fieldSet(\Yii::t('skeeks/seo', 'Codes counters'));
             echo $form->field($this, 'countersContent')->textarea(['rows' => 20]);
+        echo $form->fieldSetEnd();
+
+        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Sitemap settings'));
+            echo $form->field($this, 'activeContentElem')->checkbox(\Yii::$app->formatter->booleanFormat);
+            echo $form->field($this, 'activeTree')->checkbox(\Yii::$app->formatter->booleanFormat);
+
+            echo $form->fieldSelectMulti($this, 'content_ids', \skeeks\cms\models\CmsContent::getDataForSelect());
+            /*echo $form->fieldSelectMulti($this, 'createdBy')->widget(
+                \skeeks\cms\modules\admin\widgets\formInputs\SelectModelDialogUserInput::className()
+            );*/
+
+            echo $form->fieldSelectMulti($this, 'tree_type_ids', \yii\helpers\ArrayHelper::map(
+                \skeeks\cms\models\CmsTreeType::find()->all(), 'id', 'name'
+            ));
         echo $form->fieldSetEnd();
 
     }
