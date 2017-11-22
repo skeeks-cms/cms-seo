@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.1.1.pre
+-----------------
+ * Added upload settings for site map
+
 2.1.0
 -----------------
  * Using composer-config-plugin
