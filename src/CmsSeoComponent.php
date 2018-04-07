@@ -11,16 +11,21 @@ namespace skeeks\cms\seo;
 use skeeks\cms\backend\BackendComponent;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
+use skeeks\cms\seo\vendor\CanUrl;
 use yii\base\BootstrapInterface;
 use yii\base\Event;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\web\Application;
+use yii\web\Controller;
 use yii\web\View;
 use yii\widgets\ActiveForm;
+use yii\widgets\LinkPager;
 
 /**
- * Class CmsSeoComponent
- * @package skeeks\cms\seo
+ * @property CanUrl $canUrl;
+ *
+ * @author Semenov Alexander <semenov@skeeks.com>
  */
 class CmsSeoComponent extends Component implements BootstrapInterface
 {
@@ -107,19 +112,12 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public $forcePageParam = false;
 
 
-
-    public $isUseCanUrl = true;
-
     /**
-     * @var string
+     * @var bool|array
      */
-    public $host = '';
-
-    /**
-     * @var string
-     */
-    public $schema = '';
-
+    protected $_canUrl = [
+        'class' => 'skeeks\cms\seo\vendor\CanUrl'
+    ];
 
 
 
@@ -209,6 +207,14 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     }
 
+
+    public function init()
+    {
+        parent::init();
+    }
+
+
+
     public function bootstrap($application)
     {
         if (!$application instanceof \yii\web\Application) {
@@ -216,9 +222,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         }
 
         /**
-         * Генерация SEO метатегов.
+         * Генерация SEO метатегов по контенту страницы
          */
-        \Yii::$app->view->on(View::EVENT_END_BODY, function (Event $e) {
+        $application->view->on(View::EVENT_END_BODY, function (Event $e) {
             if ($this->enableKeywordsGenerator && !BackendComponent::getCurrent()) {
                 if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
                     $this->_generateBeforeOutputPage($e->sender);
@@ -228,7 +234,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         });
 
 
-        \Yii::$app->on(Application::EVENT_BEFORE_REQUEST, function (Event $e) {
+        $application->on(Application::EVENT_BEFORE_REQUEST, function (Event $e) {
 
             /**
              * Добавление канноникал для постранички
@@ -241,18 +247,96 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 }
             }
 
+            /**
+             * Добавление метатегов в постраничной навигации
+             */
             if ($this->registerLinkTags) {
-                \Yii::$container->set('yii\widgets\ListView', [
-                    'pager' => [
-                            'registerLinkTags' => true
-                        ]
+                \Yii::$container->set('yii\widgets\LinkPager', [
+                    'registerLinkTags' => true
                 ]);
             }
 
+            /**
+             * Убирает page=1, делает чистый урл в постричной новигации на первую страницу
+             */
             \Yii::$container->set('yii\data\Pagination', [
                 'forcePageParam' => $this->forcePageParam
             ]);
         });
+
+
+        /**
+         * Стандартная инициализация canurl
+         */
+        Event::on(Controller::class, Controller::EVENT_BEFORE_ACTION, function ($e) {
+            $this->_initDefaultCanUrl();
+        });
+
+
+        $application->on(Application::EVENT_AFTER_REQUEST, function ($e) {
+            if ($this->_isTrigerEventCanUrl()) {
+                $this->canUrl->event_after_request($e);
+            }
+        });
+
+        $application->view->on(View::EVENT_END_PAGE, function ($e) {
+            if ($this->_isTrigerEventCanUrl()) {
+                $this->canUrl->event_end_page($e);
+            }
+        });
+    }
+
+    protected function _initDefaultCanUrl() {
+
+        if ($this->canUrl === false) {
+            return false;
+        }
+
+        if (!$this->canUrl->host) {
+            $this->canUrl->host = \Yii::$app->request->hostName;
+        }
+
+        if (!$this->canUrl->port) {
+            $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
+        }
+
+
+        if (\Yii::$app->requestedRoute) {
+            $requestedUrl = Url::to(ArrayHelper::merge(["/" . \Yii::$app->requestedRoute],
+                (array)\Yii::$app->request->queryParams));
+            $autoPath = ArrayHelper::getValue(parse_url($requestedUrl), 'path');
+            $this->canUrl->path = $autoPath;
+        } else {
+            if (\Yii::$app->cms->currentTree) {
+                $this->canUrl->path = \Yii::$app->cms->currentTree->url;
+            } else {
+                //print_r(\Yii::$app->request);
+            }
+        }
+
+        $this->canUrl->SETcore_params([]);
+        $this->canUrl->SETimportant_params([]);
+
+        if (in_array(\Yii::$app->controller->action->uniqueId, ['cms/tree/view', 'savedFilters/saved-filters/view'])) {
+            $this->canUrl->ADDminor_params(['per-page' => null]);
+            $this->canUrl->ADDminor_params(['page' => null]);
+            $this->canUrl->ADDimportant_pnames(['ProductFilters']);
+            $this->canUrl->ADDimportant_pnames(['SearchProductsModel']);
+            $this->canUrl->ADDimportant_pnames(['SearchRelatedPropertiesModel']);
+        }
+    }
+
+
+    public function _isTrigerEventCanUrl()
+    {
+        if (\Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, [
+            'cms/tree',
+            'cms/content-element',
+        ])) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function _generateBeforeOutputPage(\yii\web\View $view)
@@ -267,6 +351,28 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         }
 
         \Yii::$app->response->content = $content;
+    }
+
+    /**
+     * @param $canUrl
+     * @return $this
+     */
+    public function setCanUrl($canUrl)
+    {
+        $this->_canUrl = $canUrl;
+        return $this;
+    }
+
+    /**
+     * @return array|bool|CanUrl
+     */
+    public function getCanUrl()
+    {
+        if (is_array($this->_canUrl)) {
+            $this->_canUrl = \Yii::createObject($this->_canUrl);
+        }
+
+        return $this->_canUrl;
     }
 
     /**
