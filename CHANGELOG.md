@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.1.2.pre
+-----------------
+ * ForcePageParam = false for pagination
+ 
 2.1.1
 -----------------
  * Code style

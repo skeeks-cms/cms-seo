@@ -25,9 +25,7 @@ use yii\widgets\ActiveForm;
 class CmsSeoComponent extends Component implements BootstrapInterface
 {
     /**
-     *
      * длина ключевых слов
-     *
      * @var int
      */
     public $maxKeywordsLength = 1000;
@@ -43,15 +41,22 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var bool
      */
     public $enableKeywordsGenerator = true;
+
+
+
     /**
      * @var string
      */
     public $robotsContent = "User-agent: *";
+
+
     /**
      * Содержимое счетчиков
      * @var string
      */
     public $countersContent = "";
+
+
     /**
      * @var string
      */
@@ -68,6 +73,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var string
      */
     public $treeTypeIds = [];
+
+
     /**
      * @var array
      */
@@ -91,6 +98,17 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var bool
      */
     public $registerLinkTags = true;
+
+    /**
+     * In pagionation
+     * /blog?page=1 -> /blog
+     * @var bool
+     */
+    public $forcePageParam = false;
+
+
+
+
 
     /**
      * Можно задать название и описание компонента
@@ -179,7 +197,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     public function bootstrap($application)
     {
-
         /**
          * Генерация SEO метатегов.
          * */
@@ -207,12 +224,15 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
             if ($this->registerLinkTags) {
                 \Yii::$container->set('yii\widgets\ListView', [
-                    'pager' =>
-                        [
+                    'pager' => [
                             'registerLinkTags' => true
                         ]
                 ]);
             }
+
+            \Yii::$container->set('yii\data\Pagination', [
+                'forcePageParam' => $this->forcePageParam
+            ]);
         });
     }
 

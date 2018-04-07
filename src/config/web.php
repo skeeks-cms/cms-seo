@@ -3,15 +3,13 @@ return [
 
     'bootstrap' => ['seo'],
 
-    'components' =>
-        [
+    'components' => [
             'seo' => [
                 'class' => 'skeeks\cms\seo\CmsSeoComponent',
             ],
 
             'i18n' => [
-                'translations' =>
-                    [
+                'translations' => [
                         'skeeks/seo' => [
                             'class' => 'yii\i18n\PhpMessageSource',
                             'basePath' => '@skeeks/cms/seo/messages',
