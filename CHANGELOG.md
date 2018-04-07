@@ -3,6 +3,7 @@ CHANGELOG
 
 2.1.2.pre
 -----------------
+ * +3 UTC
  * Used canUrl by default
  * Clean keywords generation
  * ForcePageParam = false for pagination

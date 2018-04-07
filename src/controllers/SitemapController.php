@@ -87,7 +87,7 @@ class SitemapController extends Controller
     private function _lastMod($model)
     {
         $string = "2013-08-03T21:14:41+01:00";
-        $string = date("Y-m-d", $model->updated_at) . "T" . date("H:i:s+04:00", $model->updated_at);
+        $string = date("Y-m-d", $model->updated_at) . "T" . date("H:i:s+03:00", $model->updated_at);
 
         return $string;
     }
