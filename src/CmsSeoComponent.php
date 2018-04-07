@@ -108,6 +108,20 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
 
 
+    public $isUseCanUrl = true;
+
+    /**
+     * @var string
+     */
+    public $host = '';
+
+    /**
+     * @var string
+     */
+    public $schema = '';
+
+
+
 
 
     /**
@@ -197,23 +211,28 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     public function bootstrap($application)
     {
+        if (!$application instanceof \yii\web\Application) {
+            return true;
+        }
+
         /**
          * Генерация SEO метатегов.
-         * */
-        \Yii::$app->view->on(View::EVENT_END_PAGE, function (Event $e) {
+         */
+        \Yii::$app->view->on(View::EVENT_END_BODY, function (Event $e) {
             if ($this->enableKeywordsGenerator && !BackendComponent::getCurrent()) {
                 if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
-                    $this->generateBeforeOutputPage($e->sender);
+                    $this->_generateBeforeOutputPage($e->sender);
                 }
             }
 
         });
 
-        /**
-         * Добавление канноникал для постранички
-         */
+
         \Yii::$app->on(Application::EVENT_BEFORE_REQUEST, function (Event $e) {
 
+            /**
+             * Добавление канноникал для постранички
+             */
             if ($this->canonicalPageParams && is_array($this->canonicalPageParams)) {
                 foreach ($this->canonicalPageParams as $paramName) {
                     if (\Yii::$app->request->get($paramName)) {
@@ -236,14 +255,14 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         });
     }
 
-    public function generateBeforeOutputPage(\yii\web\View $view)
+    protected function _generateBeforeOutputPage(\yii\web\View $view)
     {
         $content = ob_get_contents();
 
         if (!isset($view->metaTags['keywords'])) {
             $view->registerMetaTag([
                 "name" => 'keywords',
-                "content" => $this->keywords($content)
+                "content" => $this->_getKeywordsByContent($content)
             ], 'keywords');
         }
 
@@ -257,7 +276,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @param string $content
      * @return string
      */
-    public function keywords($content = "")
+    protected function _getKeywordsByContent($content = "")
     {
         $result = "";
 
@@ -308,7 +327,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @param string $content
      * @return string
      */
-    public function _processPriority($content = "")
+    protected function _processPriority($content = "")
     {
         $contentNewResult = "";
 

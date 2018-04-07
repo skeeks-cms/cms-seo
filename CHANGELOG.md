@@ -3,6 +3,7 @@ CHANGELOG
 
 2.1.2.pre
 -----------------
+ * Clean keywords generation
  * ForcePageParam = false for pagination
  
 2.1.1
