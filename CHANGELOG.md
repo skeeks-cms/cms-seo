@@ -1,9 +1,11 @@
 CHANGELOG
 ==============
 
-2.1.2.pre
+2.1.2
 -----------------
- * isRedirectNotFoundHttpException by default true
+ * New cms option isRedirectNotFoundHttpException 
+    * true - 404 -> 302 redirrect on main site page
+    * false - 404 -> render template
  * +3 UTC
  * Used canUrl by default
  * Clean keywords generation
