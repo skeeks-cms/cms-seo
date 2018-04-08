@@ -12,12 +12,14 @@ use skeeks\cms\backend\BackendComponent;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
 use skeeks\cms\seo\vendor\CanUrl;
+use yii\base\ActionEvent;
 use yii\base\BootstrapInterface;
 use yii\base\Event;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\Application;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
 use yii\web\View;
 use yii\widgets\ActiveForm;
 use yii\widgets\LinkPager;
@@ -118,6 +120,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     protected $_canUrl = [
         'class' => 'skeeks\cms\seo\vendor\CanUrl'
     ];
+
+    /**
+     * @var bool
+     */
+    public $isRedirectNotFoundHttpException = true;
 
 
 
@@ -268,8 +275,17 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         /**
          * Стандартная инициализация canurl
          */
-        Event::on(Controller::class, Controller::EVENT_BEFORE_ACTION, function ($e) {
+        Event::on(Controller::class, Controller::EVENT_BEFORE_ACTION, function (ActionEvent $e) {
             $this->_initDefaultCanUrl();
+
+            if (\Yii::$app->controller->uniqueId == 'cms/error') {
+                if (\Yii::$app->getErrorHandler()->exception instanceof NotFoundHttpException && $this->isRedirectNotFoundHttpException) {
+                    \Yii::$app->response->redirect(Url::home());
+                    \Yii::$app->response->getHeaders()->setDefault('X-Skeeks-Seo-Not-Found', "isRedirectNotFoundHttpException=true");
+                    \Yii::$app->end();
+                    return;
+                }
+            }
         });
 
 

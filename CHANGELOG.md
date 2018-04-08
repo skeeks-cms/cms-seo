@@ -3,6 +3,7 @@ CHANGELOG
 
 2.1.2.pre
 -----------------
+ * isRedirectNotFoundHttpException by default true
  * +3 UTC
  * Used canUrl by default
  * Clean keywords generation

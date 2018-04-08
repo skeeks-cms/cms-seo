@@ -192,7 +192,7 @@ class CanUrl extends Component implements BootstrapInterface
 
         $response = \Yii::$app->getResponse();
 
-        $response->getHeaders()->set('X-Skeeks-Can-Url', 'YES');
+        $response->getHeaders()->set('X-Skeeks-Seo-Can-Url', 'YES');
         $response->getHeaders()->set('Location', $res);
         $response->setStatusCode(301);
         $response->send();
