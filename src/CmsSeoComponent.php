@@ -275,13 +275,18 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
         $application->on(Application::EVENT_AFTER_REQUEST, function ($e) {
             if ($this->_isTrigerEventCanUrl()) {
-                $this->canUrl->event_after_request($e);
+                if ($this->canUrl) {
+                    $this->canUrl->event_after_request($e);
+                }
             }
         });
 
         $application->view->on(View::EVENT_END_PAGE, function ($e) {
             if ($this->_isTrigerEventCanUrl()) {
-                $this->canUrl->event_end_page($e);
+                if ($this->canUrl) {
+                    $this->canUrl->event_end_page($e);
+                }
+
             }
         });
     }
