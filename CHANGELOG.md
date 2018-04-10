@@ -1,6 +1,11 @@
 CHANGELOG
 ==============
 
+2.1.3
+-----------------
+ * Fixed bugs
+ * Option canonicalPageParams removed
+ 
 2.1.2
 -----------------
  * New cms option isRedirectNotFoundHttpException 

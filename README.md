@@ -29,6 +29,13 @@ Configuration app
 [
     'seo' => [
         'class'     => 'skeeks\cms\seo\CmsSeoComponent',
+        
+        'canUrl' => [
+            'scheme' => 'https',
+            'host' => 'site.ru',
+        ],
+        
+        
     ],
 
     'i18n' => [

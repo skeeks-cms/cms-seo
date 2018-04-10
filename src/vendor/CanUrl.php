@@ -235,10 +235,14 @@ class CanUrl extends Component implements BootstrapInterface
             throw new InvalidParamException('(!is_string($current_url))');
         }
 
+        \Yii::info("current_url = {$current_url}", self::class);
         $parsed_current_url = parse_url($current_url);
 
+        \Yii::info("parsed_current_url = " . print_r($parsed_current_url, true), self::class);
         $redirurl = $this->GETredirurl($parsed_current_url, $is_final);
 
+        \Yii::info("redirurl = {$redirurl}", self::class);
+        \Yii::info("this = " . print_r($this, true), self::class);
         if ($redirurl === $current_url) {
             return false;
         }
@@ -390,12 +394,6 @@ class CanUrl extends Component implements BootstrapInterface
         $this->_scheme = $value;
         return $this;
     }
-    public function SETschema($value)
-    {
-        $this->_scheme = $value;
-        return $this;
-    }
-    public function GETschema() { return $this->_scheme; }
     public function GETuser() { return $this->_user; }
     public function SETuser($value)
     {

@@ -95,11 +95,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         //"b"         =>  2,
         //"strong"    =>  2,
     ]; //Учитывать следующие типы разделов
-    /**
-     * Добавлять тег канноникал для постраничной навигации
-     * @var array
-     */
-    public $canonicalPageParams = ['page'];
+
     /**
      * В виджетах ListView registerLinkTags = true по умолчанию
      * @var bool
@@ -115,11 +111,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
 
     /**
+     * false - disable canurl
      * @var bool|array
      */
-    protected $_canUrl = [
-        'class' => 'skeeks\cms\seo\vendor\CanUrl'
-    ];
+    protected $_canUrl = [];
 
     /**
      * @var bool
@@ -244,17 +239,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         $application->on(Application::EVENT_BEFORE_REQUEST, function (Event $e) {
 
             /**
-             * Добавление канноникал для постранички
-             */
-            if ($this->canonicalPageParams && is_array($this->canonicalPageParams)) {
-                foreach ($this->canonicalPageParams as $paramName) {
-                    if (\Yii::$app->request->get($paramName)) {
-                        \Yii::$app->view->registerLinkTag(['rel' => 'canonical', 'href' => \Yii::$app->request->hostInfo . '/' . \Yii::$app->request->pathInfo]);
-                    }
-                }
-            }
-
-            /**
              * Добавление метатегов в постраничной навигации
              */
             if ($this->registerLinkTags) {
@@ -312,7 +296,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             $this->canUrl->host = \Yii::$app->request->hostName;
         }
 
-        if (!$this->canUrl->port) {
+        if (!$this->canUrl->scheme) {
             $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
         }
 
@@ -348,6 +332,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         if (\Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, [
             'cms/tree',
             'cms/content-element',
+            'savedFilters/saved-filters',
         ])) {
             return true;
         }
@@ -384,10 +369,18 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      */
     public function getCanUrl()
     {
+        if ($this->_canUrl === false) {
+            return $this->_canUrl;
+        }
+
         if (is_array($this->_canUrl)) {
+            $this->_canUrl = ArrayHelper::merge([
+                'class' => 'skeeks\cms\seo\vendor\CanUrl'
+            ], $this->_canUrl);
             $this->_canUrl = \Yii::createObject($this->_canUrl);
         }
 
+        //print_r($this->_canUrl);die;
         return $this->_canUrl;
     }
 
