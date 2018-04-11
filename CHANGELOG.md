@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.1.4
+-----------------
+ * Dynamic canurl params by ListView or GridView
+ 
 2.1.3.1
 -----------------
  * Fixed bugs

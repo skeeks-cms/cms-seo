@@ -15,6 +15,9 @@ use skeeks\cms\seo\vendor\CanUrl;
 use yii\base\ActionEvent;
 use yii\base\BootstrapInterface;
 use yii\base\Event;
+use yii\base\Widget;
+use yii\base\WidgetEvent;
+use yii\grid\GridView;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use yii\web\Application;
@@ -22,7 +25,9 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\View;
 use yii\widgets\ActiveForm;
+use yii\widgets\BaseListView;
 use yii\widgets\LinkPager;
+use yii\widgets\ListView;
 
 /**
  * @property CanUrl $canUrl;
@@ -262,6 +267,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         Event::on(Controller::class, Controller::EVENT_BEFORE_ACTION, function (ActionEvent $e) {
             $this->_initDefaultCanUrl();
 
+            /**
+             * Редирект 404 ошибок
+             */
             if (\Yii::$app->controller->uniqueId == 'cms/error') {
                 if (\Yii::$app->getErrorHandler()->exception instanceof NotFoundHttpException && $this->isRedirectNotFoundHttpException) {
                     \Yii::$app->response->redirect(Url::home());
@@ -293,14 +301,23 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     protected function _initDefaultCanUrl() {
 
+        /**
+         * Канурл может быть отключен вовсе
+         */
         if ($this->canUrl === false) {
             return false;
         }
 
+        /**
+         * Хост может быть не указан, тогда будет взят из запроса
+         */
         if (!$this->canUrl->host) {
             $this->canUrl->host = \Yii::$app->request->hostName;
         }
 
+        /**
+         * Аналогично со схемой
+         */
         if (!$this->canUrl->scheme) {
             $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
         }
@@ -314,23 +331,68 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         } else {
             if (\Yii::$app->cms->currentTree) {
                 $this->canUrl->path = \Yii::$app->cms->currentTree->url;
-            } else {
-                //print_r(\Yii::$app->request);
             }
         }
 
         $this->canUrl->SETcore_params([]);
         $this->canUrl->SETimportant_params([]);
 
-        if (in_array(\Yii::$app->controller->action->uniqueId, ['cms/tree/view', 'savedFilters/saved-filters/view'])) {
-            $this->canUrl->ADDminor_params(['per-page' => null]);
-            $this->canUrl->ADDminor_params(['page' => null]);
-            $this->canUrl->ADDimportant_pnames(['ProductFilters']);
-            $this->canUrl->ADDimportant_pnames(['SearchProductsModel']);
-            $this->canUrl->ADDimportant_pnames(['SearchRelatedPropertiesModel']);
-        }
+        Event::on(ListView::class, Widget::EVENT_AFTER_RUN, [$this, '_addCanurlParams']);
+        Event::on(GridView::class, Widget::EVENT_AFTER_RUN, [$this, '_addCanurlParams']);
+        
     }
 
+    public function _addCanurlParams(WidgetEvent $e)
+    {
+        //Только для этих действий
+        if (!in_array(\Yii::$app->controller->uniqueId, [
+            'cms/tree',
+            'cms/content-element',
+            'savedFilters/saved-filters',
+        ])) {
+            return true;
+        }
+        
+        $this->canUrl->ADDimportant_pnames(['ProductFilters']);
+        $this->canUrl->ADDimportant_pnames(['SearchProductsModel']);
+        $this->canUrl->ADDimportant_pnames(['SearchRelatedPropertiesModel']);
+        
+        /**
+         * @var $sender ListView|GridView
+         */
+        $sender = $e->sender;
+        $r = new \ReflectionClass($sender);
+        
+        \Yii::info('_addCanurlParams: ' . $r->getName());
+        
+        if ($pagination = $sender->dataProvider->getPagination()) {
+            
+            if ($pagination->pageCount > 1) {
+                $pageParam = $pagination->pageParam;
+                $this->canUrl->ADDimportant_params([$pagination->pageSizeParam => null]);
+                /*for ($i = 2; $i <= $pagination->pageCount; $i++) {
+                    $pages[] = $i;
+                }*/
+                if ($currentPage = \Yii::$app->request->get($pageParam)) {
+                    if ($currentPage > $pagination->pageCount && $currentPage != 1) {
+                        $this->canUrl->ADDimportant_params([$pagination->pageParam => $pagination->pageCount]);
+                    } elseif($currentPage != 1) {
+                        $this->canUrl->ADDimportant_params([$pagination->pageParam => null]);
+                    }
+                } else {
+                   $this->canUrl->ADDimportant_params([$pagination->pageParam => null]);
+                }
+            }
+            
+            
+            
+            \Yii::info('_addCanurlParams: totalCount ' . $pagination->totalCount);
+            \Yii::info('_addCanurlParams: pageParam ' . $pagination->pageParam);
+            \Yii::info('_addCanurlParams: pageCount ' . $pagination->pageCount);
+            
+        }
+        
+    }
 
     public function _isTrigerEventCanUrl()
     {
