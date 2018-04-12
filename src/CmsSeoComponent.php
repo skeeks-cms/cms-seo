@@ -77,6 +77,12 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var string
      */
     public $activeContentElem = true;
+
+    /**
+     * @var int
+     */
+    public $sitemap_min_date;
+
     /**
      * @var string
      */
@@ -147,6 +153,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             ['robotsContent', 'string'],
             ['countersContent', 'string'],
             [['contentIds', 'treeTypeIds'], 'safe'],
+            ['sitemap_min_date', 'integer'],
         ]);
     }
 
@@ -161,6 +168,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'activeTree' => \Yii::t('skeeks/seo', 'Active flag to tree'),
             'activeContentElem' => \Yii::t('skeeks/seo', 'Active flag to contents element'),
             'contentIds' => \Yii::t('skeeks/cms', 'Elements of content'),
+            'sitemap_min_date' => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
             'treeTypeIds' => \Yii::t('skeeks/seo', 'Types of tree'),
         ]);
     }
@@ -174,6 +182,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'robotsContent' => \Yii::t('skeeks/seo', 'This value is added to the automatically generated file robots.txt, in the case where it is not physically created on the server'),
             'contentIds' => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds' => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
+            'sitemap_min_date'         => \Yii::t('skeeks/exportShopYandexMarket',
+                'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
+
         ]);
     }
 
@@ -202,6 +213,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         echo $form->field($this, 'activeContentElem')->checkbox(\Yii::$app->formatter->booleanFormat);
         echo $form->field($this, 'activeTree')->checkbox(\Yii::$app->formatter->booleanFormat);
 
+
         echo $form->fieldSelectMulti($this, 'contentIds', \skeeks\cms\models\CmsContent::getDataForSelect());
         /*echo $form->fieldSelectMulti($this, 'createdBy')->widget(
             \skeeks\cms\modules\admin\widgets\formInputs\SelectModelDialogUserInput::className()
@@ -210,6 +222,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         echo $form->fieldSelectMulti($this, 'treeTypeIds', \yii\helpers\ArrayHelper::map(
             \skeeks\cms\models\CmsTreeType::find()->all(), 'id', 'name'
         ));
+
+        echo $form->field($this, 'sitemap_min_date')->widget(\kartik\datecontrol\DateControl::classname(), [
+            'type' => \kartik\datecontrol\DateControl::FORMAT_DATETIME,
+        ]);
+
         echo $form->fieldSetEnd();
 
     }

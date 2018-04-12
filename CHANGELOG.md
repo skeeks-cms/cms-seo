@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.1.5
+-----------------
+ * sitemap_min_date
+  
 2.1.4
 -----------------
  * Dynamic canurl params by ListView or GridView

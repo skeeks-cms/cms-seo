@@ -86,8 +86,11 @@ class SitemapController extends Controller
      */
     private function _lastMod($model)
     {
-        $string = "2013-08-03T21:14:41+01:00";
-        $string = date("Y-m-d", $model->updated_at) . "T" . date("H:i:s+03:00", $model->updated_at);
+        $string = date("c", $model->updated_at);
+
+        if (\Yii::$app->seo->sitemap_min_date && \Yii::$app->seo->sitemap_min_date > $model->updated_at) {
+            $string = date("c", \Yii::$app->seo->sitemap_min_date);
+        }
 
         return $string;
     }
