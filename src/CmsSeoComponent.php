@@ -288,7 +288,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
              * Редирект 404 ошибок
              */
             if (\Yii::$app->controller->uniqueId == 'cms/error') {
-                if (\Yii::$app->getErrorHandler()->exception instanceof NotFoundHttpException && $this->isRedirectNotFoundHttpException) {
+                if (\Yii::$app->getErrorHandler()->exception instanceof NotFoundHttpException && $this->isRedirectNotFoundHttpException && !BackendComponent::getCurrent()) {
                     \Yii::$app->response->redirect(Url::home());
                     \Yii::$app->response->getHeaders()->setDefault('X-Skeeks-Seo-Not-Found', "isRedirectNotFoundHttpException=true");
                     \Yii::$app->end();
