@@ -25,8 +25,6 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\View;
 use yii\widgets\ActiveForm;
-use yii\widgets\BaseListView;
-use yii\widgets\LinkPager;
 use yii\widgets\ListView;
 
 /**
@@ -53,7 +51,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var bool
      */
     public $enableKeywordsGenerator = true;
-
 
 
     /**
@@ -98,11 +95,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      */
     public $keywordsPriority = [
         "title" => 8,
-        "h1" => 6,
-        "h2" => 4,
-        "h3" => 3,
-        "h5" => 2,
-        "h6" => 2,
+        "h1"    => 6,
+        "h2"    => 4,
+        "h3"    => 3,
+        "h5"    => 2,
+        "h6"    => 2,
         //"b"         =>  2,
         //"strong"    =>  2,
     ]; //Учитывать следующие типы разделов
@@ -133,8 +130,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public $isRedirectNotFoundHttpException = true;
 
 
-
-
     /**
      * Можно задать название и описание компонента
      * @return array
@@ -161,15 +156,15 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     {
         return ArrayHelper::merge(parent::attributeLabels(), [
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'Automatic generation of keywords'),
-            'minKeywordLenth' => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
-            'maxKeywordsLength' => \Yii::t('skeeks/seo', 'Length keywords'),
-            'robotsContent' => 'Robots.txt',
-            'countersContent' => \Yii::t('skeeks/seo', 'Codes counters'),
-            'activeTree' => \Yii::t('skeeks/seo', 'Active flag to tree'),
-            'activeContentElem' => \Yii::t('skeeks/seo', 'Active flag to contents element'),
-            'contentIds' => \Yii::t('skeeks/cms', 'Elements of content'),
-            'sitemap_min_date' => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
-            'treeTypeIds' => \Yii::t('skeeks/seo', 'Types of tree'),
+            'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
+            'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
+            'robotsContent'           => 'Robots.txt',
+            'countersContent'         => \Yii::t('skeeks/seo', 'Codes counters'),
+            'activeTree'              => \Yii::t('skeeks/seo', 'Active flag to tree'),
+            'activeContentElem'       => \Yii::t('skeeks/seo', 'Active flag to contents element'),
+            'contentIds'              => \Yii::t('skeeks/cms', 'Elements of content'),
+            'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
+            'treeTypeIds'             => \Yii::t('skeeks/seo', 'Types of tree'),
         ]);
     }
 
@@ -177,12 +172,12 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     {
         return ArrayHelper::merge(parent::attributeHints(), [
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
-            'minKeywordLenth' => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
-            'maxKeywordsLength' => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
-            'robotsContent' => \Yii::t('skeeks/seo', 'This value is added to the automatically generated file robots.txt, in the case where it is not physically created on the server'),
-            'contentIds' => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
-            'treeTypeIds' => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
-            'sitemap_min_date'         => \Yii::t('skeeks/exportShopYandexMarket',
+            'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
+            'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
+            'robotsContent'           => \Yii::t('skeeks/seo', 'This value is added to the automatically generated file robots.txt, in the case where it is not physically created on the server'),
+            'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
+            'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
+            'sitemap_min_date'        => \Yii::t('skeeks/exportShopYandexMarket',
                 'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
 
         ]);
@@ -238,7 +233,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     }
 
 
-
     public function bootstrap($application)
     {
         if (!$application instanceof \yii\web\Application) {
@@ -265,7 +259,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
              */
             if ($this->registerLinkTags) {
                 \Yii::$container->set('yii\widgets\LinkPager', [
-                    'registerLinkTags' => true
+                    'registerLinkTags' => true,
                 ]);
             }
 
@@ -273,7 +267,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
              * Убирает page=1, делает чистый урл в постричной новигации на первую страницу
              */
             \Yii::$container->set('yii\data\Pagination', [
-                'forcePageParam' => $this->forcePageParam
+                'forcePageParam' => $this->forcePageParam,
             ]);
         });
 
@@ -316,7 +310,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         });
     }
 
-    protected function _initDefaultCanUrl() {
+    protected function _initDefaultCanUrl()
+    {
 
         /**
          * Канурл может быть отключен вовсе
@@ -341,7 +336,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
 
         if (\Yii::$app->requestedRoute) {
-            $requestedUrl = Url::to(ArrayHelper::merge(["/" . \Yii::$app->requestedRoute],
+            $requestedUrl = Url::to(ArrayHelper::merge(["/".\Yii::$app->requestedRoute],
                 (array)\Yii::$app->request->queryParams));
             $autoPath = ArrayHelper::getValue(parse_url($requestedUrl), 'path');
             $this->canUrl->path = $autoPath;
@@ -356,7 +351,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
         Event::on(ListView::class, Widget::EVENT_AFTER_RUN, [$this, '_addCanurlParams']);
         Event::on(GridView::class, Widget::EVENT_AFTER_RUN, [$this, '_addCanurlParams']);
-        
+
     }
 
     public function _addCanurlParams(WidgetEvent $e)
@@ -366,24 +361,27 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'cms/tree',
             'cms/content-element',
             'savedFilters/saved-filters',
-        ])) {
+        ])
+        ) {
             return true;
         }
-        
+
         $this->canUrl->ADDimportant_pnames(['ProductFilters']);
         $this->canUrl->ADDimportant_pnames(['SearchProductsModel']);
         $this->canUrl->ADDimportant_pnames(['SearchRelatedPropertiesModel']);
-        
+
         /**
          * @var $sender ListView|GridView
          */
         $sender = $e->sender;
         $r = new \ReflectionClass($sender);
-        
-        \Yii::info('_addCanurlParams: ' . $r->getName());
-        
+
+        if (YII_DEBUG === true) {
+            \Yii::info('_addCanurlParams: '.$r->getName());
+        }
+
         if ($pagination = $sender->dataProvider->getPagination()) {
-            
+
             if ($pagination->pageCount > 1) {
                 $pageParam = $pagination->pageParam;
                 $this->canUrl->ADDimportant_params([$pagination->pageSizeParam => null]);
@@ -393,31 +391,33 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 if ($currentPage = \Yii::$app->request->get($pageParam)) {
                     if ($currentPage > $pagination->pageCount && $currentPage != 1) {
                         $this->canUrl->ADDimportant_params([$pagination->pageParam => $pagination->pageCount]);
-                    } elseif($currentPage != 1) {
+                    } elseif ($currentPage != 1) {
                         $this->canUrl->ADDimportant_params([$pagination->pageParam => null]);
                     }
                 } else {
-                   $this->canUrl->ADDimportant_params([$pagination->pageParam => null]);
+                    $this->canUrl->ADDimportant_params([$pagination->pageParam => null]);
                 }
             }
-            
-            
-            
-            \Yii::info('_addCanurlParams: totalCount ' . $pagination->totalCount);
-            \Yii::info('_addCanurlParams: pageParam ' . $pagination->pageParam);
-            \Yii::info('_addCanurlParams: pageCount ' . $pagination->pageCount);
-            
+
+
+            if (YII_DEBUG === true) {
+                \Yii::info('_addCanurlParams: totalCount '.$pagination->totalCount);
+                \Yii::info('_addCanurlParams: pageParam '.$pagination->pageParam);
+                \Yii::info('_addCanurlParams: pageCount '.$pagination->pageCount);
+
+            }
         }
-        
+
     }
 
     public function _isTrigerEventCanUrl()
     {
         if (\Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, [
-            'cms/tree',
-            'cms/content-element',
-            'savedFilters/saved-filters',
-        ])) {
+                'cms/tree',
+                'cms/content-element',
+                'savedFilters/saved-filters',
+            ])
+        ) {
             return true;
         }
 
@@ -430,8 +430,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
         if (!isset($view->metaTags['keywords'])) {
             $view->registerMetaTag([
-                "name" => 'keywords',
-                "content" => $this->_getKeywordsByContent($content)
+                "name"    => 'keywords',
+                "content" => $this->_getKeywordsByContent($content),
             ], 'keywords');
         }
 
@@ -459,7 +459,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
         if (is_array($this->_canUrl)) {
             $this->_canUrl = ArrayHelper::merge([
-                'class' => 'skeeks\cms\seo\vendor\CanUrl'
+                'class' => 'skeeks\cms\seo\vendor\CanUrl',
             ], $this->_canUrl);
             $this->_canUrl = \Yii::createObject($this->_canUrl);
         }
@@ -507,13 +507,16 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
             $count = 0;
             foreach ($words as $word) {
-                if (strlen($result) > $this->maxKeywordsLength) break;
+                if (strlen($result) > $this->maxKeywordsLength) {
+                    break;
+                }
 
                 $count++;
                 if ($count > 1) {
-                    $result .= ', ' . StringHelper::strtolower($word);
-                } else
+                    $result .= ', '.StringHelper::strtolower($word);
+                } else {
                     $result .= StringHelper::strtolower($word);
+                }
             }
         }
         return $result;
@@ -541,13 +544,13 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
                 if ($contentNew) {
                     for ($i = 1; $i <= $prioryty; $i++) {
-                        $contentNewResult .= " " . $contentNew;
+                        $contentNewResult .= " ".$contentNew;
                     }
                 }
             }
         }
 
-        return $contentNewResult . $content;
+        return $contentNewResult.$content;
     }
 
 }
