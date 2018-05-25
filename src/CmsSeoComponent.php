@@ -177,7 +177,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'robotsContent'           => \Yii::t('skeeks/seo', 'This value is added to the automatically generated file robots.txt, in the case where it is not physically created on the server'),
             'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
-            'sitemap_min_date'        => \Yii::t('skeeks/exportShopYandexMarket',
+            'sitemap_min_date'        => \Yii::t('skeeks/seo',
                 'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
 
         ]);
@@ -219,7 +219,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         ));
 
         echo $form->field($this, 'sitemap_min_date')->widget(\kartik\datecontrol\DateControl::classname(), [
-            'type' => \kartik\datecontrol\DateControl::FORMAT_DATETIME,
+            'type' => \kartik\datecontrol\DateControl::FORMAT_DATE,
         ]);
 
         echo $form->fieldSetEnd();
