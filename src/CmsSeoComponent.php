@@ -276,7 +276,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
          * Стандартная инициализация canurl
          */
         Event::on(Controller::class, Controller::EVENT_BEFORE_ACTION, function (ActionEvent $e) {
-            $this->_initDefaultCanUrl();
+            if (\Yii::$app->urlManager->enablePrettyUrl) {
+                $this->_initDefaultCanUrl();
+            }
+
 
             /**
              * Редирект 404 ошибок
@@ -312,7 +315,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     protected function _initDefaultCanUrl()
     {
-
         /**
          * Канурл может быть отключен вовсе
          */
@@ -412,7 +414,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     public function _isTrigerEventCanUrl()
     {
-        if (\Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, [
+        if (\Yii::$app->urlManager->enablePrettyUrl && \Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, [
                 'cms/tree',
                 'cms/content-element',
                 'savedFilters/saved-filters',
