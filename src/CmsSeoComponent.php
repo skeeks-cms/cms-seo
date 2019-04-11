@@ -335,8 +335,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         if (!$this->canUrl->scheme) {
             $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
         }
-
-
+        
         if (\Yii::$app->requestedRoute) {
             $requestedUrl = Url::to(ArrayHelper::merge(["/".\Yii::$app->requestedRoute],
                 (array)\Yii::$app->request->queryParams));
