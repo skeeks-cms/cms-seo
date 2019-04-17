@@ -235,7 +235,6 @@ class CanUrl extends Component implements BootstrapInterface
             throw new InvalidParamException('(!is_string($current_url))');
         }
 
-        print_r(\Yii::$app->request->secureProtocolHeaders);die;
         \Yii::info("current_url = {$current_url}", self::class);
         $parsed_current_url = parse_url($current_url);
 
