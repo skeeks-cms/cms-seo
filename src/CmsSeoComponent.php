@@ -30,11 +30,17 @@ use yii\widgets\ListView;
 
 /**
  * @property CanUrl $canUrl;
+ * @property array $utms;
  *
  * @author Semenov Alexander <semenov@skeeks.com>
  */
 class CmsSeoComponent extends Component implements BootstrapInterface
 {
+    /**
+     *
+     */
+    const SESSION_SEO_REQUEST_UTMS = 'session_seo_request_utms';
+
     /**
      * Максимадбгая длина ключевых слов
      * @var int
@@ -68,6 +74,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var string
      */
     public $countersContent = "";
+
+    /**
+     * @var bool Подключить в низ страницы автоматически
+     */
+    public $isAutoIncludecountersContent = true;
 
 
     /**
@@ -176,7 +187,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeHints()
     {
         return ArrayHelper::merge(parent::attributeHints(), [
-            'countersContent' => \Yii::t('skeeks/seo', 'В это поле вы можете поставить любые коды счетчиков и сторонних систем (yandex.metrics jivosite google.metrics и прочие). Они будут выведены внизу страницы, перед закрывающим тегом body'),
+            'countersContent'         => \Yii::t('skeeks/seo',
+                'В это поле вы можете поставить любые коды счетчиков и сторонних систем (yandex.metrics jivosite google.metrics и прочие). Они будут выведены внизу страницы, перед закрывающим тегом body'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
@@ -261,7 +273,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 }
             }
 
-            if (!BackendComponent::getCurrent()) {
+            if (!BackendComponent::getCurrent() && !in_array(\Yii::$app->controller->module->id, ['debug', 'gii']) && $this->isAutoIncludecountersContent) {
                 if ($this->countersContent) {
                     $content = ob_get_contents();
                     if (strpos($content, $this->countersContent) === false) {
@@ -289,6 +301,41 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             \Yii::$container->set('yii\data\Pagination', [
                 'forcePageParam' => $this->forcePageParam,
             ]);
+
+            if (ENV == 'dev') {
+                if (\Yii::$app->request->queryParams) {
+                    $utms = [];
+                    foreach (\Yii::$app->request->queryParams as $paramName => $paramValue) {
+                        if (in_array($paramName, [
+                            'from',
+                            '_openstat',
+
+                            'utm_source',
+                            'utm_medium',
+                            'utm_campaign',
+                            'utm_content',
+                            'utm_term',
+                            'utm_referrer',
+
+                            'pm_source',
+                            'pm_block',
+                            'pm_position',
+
+                            'clid',
+                            'yclid',
+                            'ymclid',
+                            'frommarket',
+                            'text',
+                        ])) {
+                            $utms[$paramName] = $paramValue;
+                        }
+                    }
+
+                    if ($utms) {
+                        $this->setUtms($utms);
+                    }
+                }
+            }
         });
 
 
@@ -332,6 +379,34 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         });
     }
 
+    /**
+     * @param array $utms
+     * @return $this
+     */
+    public function setUtms($utms = [])
+    {
+        $utms['created_at'] = time();
+        \Yii::$app->session->set(self::SESSION_SEO_REQUEST_UTMS, $utms);
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUtms()
+    {
+        $utms = (array)\Yii::$app->session->get(self::SESSION_SEO_REQUEST_UTMS);
+        if ($utms) {
+            $created_at = ArrayHelper::getValue($utms, 'created_at');
+
+            //Если с момента создания утм прошло более 24 часов то
+            if (time() - $created_at >= 3600*24) {
+                $utms = [];
+            }
+        }
+        return $utms;
+    }
+
     protected function _initDefaultCanUrl()
     {
         /**
@@ -354,7 +429,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         if (!$this->canUrl->scheme) {
             $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
         }
-        
+
         if (\Yii::$app->requestedRoute) {
             $requestedUrl = Url::to(ArrayHelper::merge(["/".\Yii::$app->requestedRoute],
                 (array)\Yii::$app->request->queryParams));
@@ -397,7 +472,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         $r = new \ReflectionClass($sender);
 
         if (YII_DEBUG === true) {
-            \Yii::info('_addCanurlParams: '.$r->getName(), (new \ReflectionClass($this->canUrl))->getName() ) ;
+            \Yii::info('_addCanurlParams: '.$r->getName(), (new \ReflectionClass($this->canUrl))->getName());
         }
 
         if ($pagination = $sender->dataProvider->getPagination()) {
