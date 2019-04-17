@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.1.8
+-----------------
+ * countersContent выводится автоматически в шаблон, перед закрывающим тегом body
+ 
 2.1.7
 -----------------
  * Canurl only for urlManager->enablePrettyUrl

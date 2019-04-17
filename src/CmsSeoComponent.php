@@ -19,6 +19,7 @@ use yii\base\Widget;
 use yii\base\WidgetEvent;
 use yii\grid\GridView;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\Application;
 use yii\web\Controller;
@@ -35,26 +36,29 @@ use yii\widgets\ListView;
 class CmsSeoComponent extends Component implements BootstrapInterface
 {
     /**
-     * длина ключевых слов
+     * Максимадбгая длина ключевых слов
      * @var int
      */
     public $maxKeywordsLength = 1000;
+
     /**
      * @var int минимальная длина слова которая попадет в списко ключевых слов
      */
     public $minKeywordLenth = 8;
+
     /**
-     * @var array
+     * @var array ключевые слова которые не должны попадать в ключевые
      */
     public $keywordsStopWords = [];
+
     /**
-     * @var bool
+     * @var bool включить автогенерацию ключевых слов
      */
     public $enableKeywordsGenerator = true;
 
 
     /**
-     * @var string
+     * @var string если файла robots.txt нет физически, то он формируется динамически с этим содержимым
      */
     public $robotsContent = "User-agent: *";
 
@@ -84,6 +88,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var string
      */
     public $contentIds = [];
+
     /**
      * @var string
      */
@@ -171,6 +176,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeHints()
     {
         return ArrayHelper::merge(parent::attributeHints(), [
+            'countersContent' => \Yii::t('skeeks/seo', 'В это поле вы можете поставить любые коды счетчиков и сторонних систем (yandex.metrics jivosite google.metrics и прочие). Они будут выведены внизу страницы, перед закрывающим тегом body'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
@@ -243,12 +249,26 @@ class CmsSeoComponent extends Component implements BootstrapInterface
          * Генерация SEO метатегов по контенту страницы
          */
         $application->view->on(View::EVENT_END_BODY, function (Event $e) {
+
+            /**
+             * @var $view View
+             */
+            $view = $e->sender;
+
             if ($this->enableKeywordsGenerator && !BackendComponent::getCurrent()) {
                 if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
-                    $this->_generateBeforeOutputPage($e->sender);
+                    $this->_autoGenerateKeywords($view);
                 }
             }
 
+            if (!BackendComponent::getCurrent()) {
+                if ($this->countersContent) {
+                    $content = ob_get_contents();
+                    if (strpos($content, $this->countersContent) === false) {
+                        echo Html::tag('div', $this->countersContent, ['style' => 'display: none;']);
+                    }
+                }
+            }
         });
 
 
@@ -293,7 +313,6 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 }
             }
         });
-
 
         $application->on(Application::EVENT_AFTER_REQUEST, function ($e) {
             if ($this->_isTrigerEventCanUrl()) {
@@ -425,7 +444,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         return false;
     }
 
-    protected function _generateBeforeOutputPage(\yii\web\View $view)
+    /**
+     * @param View $view
+     */
+    protected function _autoGenerateKeywords(\yii\web\View $view)
     {
         $content = ob_get_contents();
 
@@ -436,7 +458,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             ], 'keywords');
         }
 
-        \Yii::$app->response->content = $content;
+        //\Yii::$app->response->content = $content;
     }
 
     /**
