@@ -302,38 +302,37 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 'forcePageParam' => $this->forcePageParam,
             ]);
 
-            if (ENV == 'dev') {
-                if (\Yii::$app->request->queryParams) {
-                    $utms = [];
-                    foreach (\Yii::$app->request->queryParams as $paramName => $paramValue) {
-                        if (in_array($paramName, [
-                            'from',
-                            '_openstat',
+            
+            if (\Yii::$app->request->queryParams) {
+                $utms = [];
+                foreach (\Yii::$app->request->queryParams as $paramName => $paramValue) {
+                    if (in_array($paramName, [
+                        'from',
+                        '_openstat',
 
-                            'utm_source',
-                            'utm_medium',
-                            'utm_campaign',
-                            'utm_content',
-                            'utm_term',
-                            'utm_referrer',
+                        'utm_source',
+                        'utm_medium',
+                        'utm_campaign',
+                        'utm_content',
+                        'utm_term',
+                        'utm_referrer',
 
-                            'pm_source',
-                            'pm_block',
-                            'pm_position',
+                        'pm_source',
+                        'pm_block',
+                        'pm_position',
 
-                            'clid',
-                            'yclid',
-                            'ymclid',
-                            'frommarket',
-                            'text',
-                        ])) {
-                            $utms[$paramName] = $paramValue;
-                        }
+                        'clid',
+                        'yclid',
+                        'ymclid',
+                        'frommarket',
+                        'text',
+                    ])) {
+                        $utms[$paramName] = $paramValue;
                     }
+                }
 
-                    if ($utms) {
-                        $this->setUtms($utms);
-                    }
+                if ($utms) {
+                    $this->setUtms($utms);
                 }
             }
         });
