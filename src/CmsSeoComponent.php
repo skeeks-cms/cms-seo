@@ -29,6 +29,21 @@ use yii\widgets\ActiveForm;
 use yii\widgets\ListView;
 
 /**
+ *
+ * 'seo' => [
+        'canUrl' => [
+            'scheme' => 'https',
+            'host'   => 'skeeks-travel.ru',
+        ],
+    ],
+ *
+ * 'seo' => [
+        'canUrl' => [
+            'scheme' => CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN,
+            'host'   => CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN,
+        ],
+    ],
+ *
  * @property CanUrl $canUrl;
  * @property array $utms;
  *
@@ -40,6 +55,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      *
      */
     const SESSION_SEO_REQUEST_UTMS = 'session_seo_request_utms';
+
+    /**
+     *
+     */
+    const CANURL_DATA_FROM_MAIN_DOMAIN = '_can_url_from_main_domain';
 
     /**
      * Максимадбгая длина ключевых слов
@@ -418,6 +438,14 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         /**
          * Хост может быть не указан, тогда будет взят из запроса
          */
+        if ($this->canUrl->host == self::CANURL_DATA_FROM_MAIN_DOMAIN) {
+            if (\Yii::$app->cms->site && \Yii::$app->cms->site->cmsSiteMainDomain) {
+                $this->canUrl->host = \Yii::$app->cms->site->cmsSiteMainDomain->domain;
+            } else {
+                $this->canUrl->host = null;
+            }
+        }
+
         if (!$this->canUrl->host) {
             $this->canUrl->host = \Yii::$app->request->hostName;
         }
@@ -425,9 +453,18 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         /**
          * Аналогично со схемой
          */
+        if ($this->canUrl->scheme == self::CANURL_DATA_FROM_MAIN_DOMAIN) {
+            if (\Yii::$app->cms->site && \Yii::$app->cms->site->cmsSiteMainDomain) {
+                $this->canUrl->scheme = \Yii::$app->cms->site->cmsSiteMainDomain->is_https ? "https" : "http";
+            } else {
+                $this->canUrl->scheme = null;
+            }
+        }
+
         if (!$this->canUrl->scheme) {
             $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
         }
+
 
         if (\Yii::$app->requestedRoute) {
             $requestedUrl = Url::to(ArrayHelper::merge(["/".\Yii::$app->requestedRoute],
