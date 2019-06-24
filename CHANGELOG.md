@@ -1,6 +1,10 @@
 CHANGELOG
 ==============
 
+2.1.9
+-----------------
+ * Added \skeeks\cms\seo\CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN
+
 2.1.8
 -----------------
  * Save utms
