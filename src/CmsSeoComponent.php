@@ -507,9 +507,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
         $sender = $e->sender;
         $r = new \ReflectionClass($sender);
 
-        if (YII_DEBUG === true) {
+        /*if (YII_DEBUG === true) {
             \Yii::info('_addCanurlParams: '.$r->getName(), (new \ReflectionClass($this->canUrl))->getName());
-        }
+        }*/
 
         if ($pagination = $sender->dataProvider->getPagination()) {
 
@@ -531,12 +531,12 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             }
 
 
-            if (YII_DEBUG === true) {
+            /*if (YII_DEBUG === true) {
                 \Yii::info('_addCanurlParams: totalCount '.$pagination->totalCount, (new \ReflectionClass($this->canUrl))->getName());
                 \Yii::info('_addCanurlParams: pageParam '.$pagination->pageParam, (new \ReflectionClass($this->canUrl))->getName());
                 \Yii::info('_addCanurlParams: pageCount '.$pagination->pageCount, (new \ReflectionClass($this->canUrl))->getName());
 
-            }
+            }*/
         }
 
     }
