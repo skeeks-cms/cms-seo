@@ -31,21 +31,21 @@ use yii\widgets\ListView;
 /**
  *
  * 'seo' => [
-        'canUrl' => [
-            'scheme' => 'https',
-            'host'   => 'skeeks-travel.ru',
-        ],
-    ],
+ * 'canUrl' => [
+ * 'scheme' => 'https',
+ * 'host'   => 'skeeks-travel.ru',
+ * ],
+ * ],
  *
  * 'seo' => [
-        'canUrl' => [
-            'scheme' => CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN,
-            'host'   => CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN,
-        ],
-    ],
+ * 'canUrl' => [
+ * 'scheme' => CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN,
+ * 'host'   => CmsSeoComponent::CANURL_DATA_FROM_MAIN_DOMAIN,
+ * ],
+ * ],
  *
  * @property CanUrl $canUrl;
- * @property array $utms;
+ * @property array  $utms;
  *
  * @author Semenov Alexander <semenov@skeeks.com>
  */
@@ -322,7 +322,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 'forcePageParam' => $this->forcePageParam,
             ]);
 
-            
+
             if (\Yii::$app->request->queryParams) {
                 $utms = [];
                 foreach (\Yii::$app->request->queryParams as $paramName => $paramValue) {
@@ -419,7 +419,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             $created_at = ArrayHelper::getValue($utms, 'created_at');
 
             //Если с момента создания утм прошло более 24 часов то
-            if (time() - $created_at >= 3600*24) {
+            if (time() - $created_at >= 3600 * 24) {
                 $utms = [];
             }
         }
@@ -488,11 +488,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function _addCanurlParams(WidgetEvent $e)
     {
         //Только для этих действий
-        if (!in_array(\Yii::$app->controller->uniqueId, [
-            'cms/tree',
-            'cms/content-element',
-            'savedFilters/saved-filters',
-        ])
+        if (!in_array(\Yii::$app->controller->uniqueId, $this->canUrlEnableDefaultControllers)
         ) {
             return true;
         }
@@ -541,13 +537,16 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 
     }
 
+    public $canUrlEnableDefaultControllers = [
+        'cms/tree',
+        'cms/content-element',
+        'savedFilters/saved-filters',
+    ];
+
     public function _isTrigerEventCanUrl()
     {
-        if (\Yii::$app->urlManager->enablePrettyUrl && \Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, [
-                'cms/tree',
-                'cms/content-element',
-                'savedFilters/saved-filters',
-            ])
+        if (
+            \Yii::$app->urlManager->enablePrettyUrl && \Yii::$app->controller && in_array(\Yii::$app->controller->uniqueId, $this->canUrlEnableDefaultControllers)
         ) {
             return true;
         }
