@@ -16,6 +16,7 @@ use yii\base\Exception;
 use yii\base\InvalidParamException;
 use yii\base\UserException;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\web\Application;
 use yii\web\View;
 
@@ -230,6 +231,7 @@ class CanUrl extends Component implements BootstrapInterface
         }
         if (!isset($current_url)) {
             $current_url = \Yii::$app->getRequest()->getAbsoluteUrl();
+            $current_url = Url::current([], true);
         }
         if (!is_string($current_url)) {
             throw new InvalidParamException('(!is_string($current_url))');
