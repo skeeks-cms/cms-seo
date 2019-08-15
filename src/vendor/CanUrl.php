@@ -231,7 +231,10 @@ class CanUrl extends Component implements BootstrapInterface
         }
         if (!isset($current_url)) {
             $current_url = \Yii::$app->getRequest()->getAbsoluteUrl();
-            $current_url = Url::current([], true);
+            /*$current_url = Url::current([], true);*/
+            /*print_r(\Yii::$app->getRequest()->getAbsoluteUrl());
+            print_r($current_url);
+            die;*/
         }
         if (!is_string($current_url)) {
             throw new InvalidParamException('(!is_string($current_url))');
