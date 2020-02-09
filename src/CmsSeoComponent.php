@@ -165,6 +165,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      */
     public $isRedirectNotFoundHttpException = true;
 
+    /**
+     * @var bool
+     */
+    public $enableErrorPage=false;
 
     /**
      * Можно задать название и описание компонента
@@ -180,7 +184,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function rules()
     {
         return ArrayHelper::merge(parent::rules(), [
-            [['enableKeywordsGenerator', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree'], 'integer'],
+            [['enableKeywordsGenerator', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree', 'enableErrorPage'], 'integer'],
             ['robotsContent', 'string'],
             ['countersContent', 'string'],
             [['contentIds', 'treeTypeIds'], 'safe'],
@@ -201,6 +205,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'contentIds'              => \Yii::t('skeeks/cms', 'Elements of content'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'Types of tree'),
+            'enableErrorPage'         => \Yii::t('skeeks/seo', 'Show 404 page'),
         ]);
     }
 
@@ -217,6 +222,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo',
                 'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
+            'enableErrorPage'         => \Yii::t('skeeks/seo', 'If nothing is selected, then error page redirect to homepage'),
 
         ]);
     }
@@ -260,6 +266,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'type' => \kartik\datecontrol\DateControl::FORMAT_DATE,
         ]);
 
+        $result .= $form->fieldSetEnd();
+        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Error page'));
+        $result .= $form->field($this, 'enableErrorPage')->checkbox(\Yii::$app->formatter->booleanFormat);
         $result .= $form->fieldSetEnd();
         return $result;
 
@@ -372,7 +381,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
              * Редирект 404 ошибок
              */
             if (\Yii::$app->controller->uniqueId == 'cms/error') {
-                if (\Yii::$app->getErrorHandler()->exception instanceof NotFoundHttpException && $this->isRedirectNotFoundHttpException && !BackendComponent::getCurrent()) {
+                if (\Yii::$app->getErrorHandler()->exception instanceof NotFoundHttpException && $this->isRedirectNotFoundHttpException && !BackendComponent::getCurrent() && !\Yii::$app->seo->enableErrorPage) {
                     \Yii::$app->response->redirect(Url::home());
                     \Yii::$app->response->getHeaders()->setDefault('X-Skeeks-Seo-Not-Found', "isRedirectNotFoundHttpException=true");
                     \Yii::$app->end();
