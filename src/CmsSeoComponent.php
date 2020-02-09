@@ -222,45 +222,46 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     }
 
 
-    public function renderConfigForm(ActiveForm $form)
+    public function renderConfigFormFields(ActiveForm $form)
     {
-        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Keywords'));
+        $result = $form->fieldSet(\Yii::t('skeeks/seo', 'Keywords'));
 
-        echo $form->field($this, 'enableKeywordsGenerator')->checkbox(\Yii::$app->formatter->booleanFormat);
+        $result .= $form->field($this, 'enableKeywordsGenerator')->checkbox(\Yii::$app->formatter->booleanFormat);
 
-        echo $form->field($this, 'minKeywordLenth');
-        echo $form->field($this, 'maxKeywordsLength');
-
-
-        echo $form->fieldSetEnd();
-
-        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Indexing'));
-        echo $form->field($this, 'robotsContent')->textarea(['rows' => 7]);
-        echo $form->fieldSetEnd();
-
-        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Codes counters'));
-        echo $form->field($this, 'countersContent')->textarea(['rows' => 20]);
-        echo $form->fieldSetEnd();
-
-        echo $form->fieldSet(\Yii::t('skeeks/seo', 'Sitemap settings'));
-        echo $form->field($this, 'activeContentElem')->checkbox(\Yii::$app->formatter->booleanFormat);
-        echo $form->field($this, 'activeTree')->checkbox(\Yii::$app->formatter->booleanFormat);
+        $result .= $form->field($this, 'minKeywordLenth');
+        $result .= $form->field($this, 'maxKeywordsLength');
 
 
-        echo $form->fieldSelectMulti($this, 'contentIds', \skeeks\cms\models\CmsContent::getDataForSelect());
+        $result .= $form->fieldSetEnd();
+
+        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Indexing'));
+        $result .= $form->field($this, 'robotsContent')->textarea(['rows' => 7]);
+        $result .= $form->fieldSetEnd();
+
+        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Codes counters'));
+        $result .= $form->field($this, 'countersContent')->textarea(['rows' => 20]);
+        $result .= $form->fieldSetEnd();
+
+        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Sitemap settings'));
+        $result .= $form->field($this, 'activeContentElem')->checkbox(\Yii::$app->formatter->booleanFormat);
+        $result .= $form->field($this, 'activeTree')->checkbox(\Yii::$app->formatter->booleanFormat);
+
+
+        $result .= $form->fieldSelectMulti($this, 'contentIds', \skeeks\cms\models\CmsContent::getDataForSelect());
         /*echo $form->fieldSelectMulti($this, 'createdBy')->widget(
             \skeeks\cms\modules\admin\widgets\formInputs\SelectModelDialogUserInput::className()
         );*/
 
-        echo $form->fieldSelectMulti($this, 'treeTypeIds', \yii\helpers\ArrayHelper::map(
+        $result .= $form->fieldSelectMulti($this, 'treeTypeIds', \yii\helpers\ArrayHelper::map(
             \skeeks\cms\models\CmsTreeType::find()->all(), 'id', 'name'
         ));
 
-        echo $form->field($this, 'sitemap_min_date')->widget(\kartik\datecontrol\DateControl::classname(), [
+        $result .= $form->field($this, 'sitemap_min_date')->widget(\kartik\datecontrol\DateControl::classname(), [
             'type' => \kartik\datecontrol\DateControl::FORMAT_DATE,
         ]);
 
-        echo $form->fieldSetEnd();
+        $result .= $form->fieldSetEnd();
+        return $result;
 
     }
 
