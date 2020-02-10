@@ -11,6 +11,7 @@ namespace skeeks\cms\seo;
 use skeeks\cms\backend\BackendComponent;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
+use skeeks\cms\seo\assets\CmsSeoAsset;
 use skeeks\cms\seo\vendor\CanUrl;
 use yii\base\ActionEvent;
 use yii\base\BootstrapInterface;
@@ -174,6 +175,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     {
         return array_merge(parent::descriptorConfig(), [
             'name' => \Yii::t('skeeks/seo', 'Seo'),
+            'image' => [
+                CmsSeoAsset::class, 'icons/seo-icon.png'
+            ],
         ]);
     }
 
