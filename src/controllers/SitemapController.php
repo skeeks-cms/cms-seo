@@ -50,7 +50,7 @@ class SitemapController extends Controller
      */
     protected function _addTrees(&$data = [])
     {
-        $query = Tree::find()->where(['cms_site_id' => \Yii::$app->cms->site->id]);
+        $query = Tree::find()->where(['cms_site_id' => \Yii::$app->skeeks->site->id]);
 
         if (\Yii::$app->seo->activeTree) {
             $query->andWhere(['active' => 'Y']);
@@ -103,7 +103,7 @@ class SitemapController extends Controller
     {
         $query = CmsContentElement::find()
             ->joinWith('cmsTree')
-            ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->cms->site->id]);
+            ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->skeeks->site->id]);
 
 
         if (\Yii::$app->seo->activeContentElem) {

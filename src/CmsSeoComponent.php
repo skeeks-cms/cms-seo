@@ -444,8 +444,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
          * Хост может быть не указан, тогда будет взят из запроса
          */
         if ($this->canUrl->host == self::CANURL_DATA_FROM_MAIN_DOMAIN) {
-            if (\Yii::$app->cms->site && \Yii::$app->cms->site->cmsSiteMainDomain) {
-                $this->canUrl->host = \Yii::$app->cms->site->cmsSiteMainDomain->domain;
+            if (\Yii::$app->skeeks->site && \Yii::$app->skeeks->site->cmsSiteMainDomain) {
+                $this->canUrl->host = \Yii::$app->skeeks->site->cmsSiteMainDomain->domain;
             } else {
                 $this->canUrl->host = null;
             }
@@ -459,8 +459,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
          * Аналогично со схемой
          */
         if ($this->canUrl->scheme == self::CANURL_DATA_FROM_MAIN_DOMAIN) {
-            if (\Yii::$app->cms->site && \Yii::$app->cms->site->cmsSiteMainDomain) {
-                $this->canUrl->scheme = \Yii::$app->cms->site->cmsSiteMainDomain->is_https ? "https" : "http";
+            if (\Yii::$app->skeeks->site && \Yii::$app->skeeks->site->cmsSiteMainDomain) {
+                $this->canUrl->scheme = \Yii::$app->skeeks->site->cmsSiteMainDomain->is_https ? "https" : "http";
             } else {
                 $this->canUrl->scheme = null;
             }
