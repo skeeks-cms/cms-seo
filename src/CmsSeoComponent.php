@@ -109,6 +109,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * Содержимое счетчиков
      * @var string
      */
+    public $header_content = "";
+    /**
+     * Содержимое счетчиков
+     * @var string
+     */
     public $countersContent = "";
 
     /**
@@ -190,6 +195,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     {
         return array_merge(parent::descriptorConfig(), [
             'name'  => \Yii::t('skeeks/seo', 'Seo'),
+            'description'  => 'Установка счетчиков, правка robots.txt, карта сайта',
             'image' => [
                 CmsSeoAsset::class,
                 'icons/seo-icon.png',
@@ -203,6 +209,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             [['enableKeywordsGenerator', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree'], 'integer'],
             ['robotsContent', 'string'],
             ['countersContent', 'string'],
+            ['header_content', 'string'],
             [['contentIds', 'treeTypeIds'], 'safe'],
             ['sitemap_min_date', 'integer'],
             ['title_append', 'string'],
@@ -217,7 +224,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
             'robotsContent'           => 'Robots.txt',
             'title_append'           => 'Добавление title ко всем страницам сайта',
-            'countersContent'         => \Yii::t('skeeks/seo', 'Codes counters'),
+            'countersContent'         => \Yii::t('skeeks/seo', 'Footer'),
+            'header_content'         => \Yii::t('skeeks/seo', 'Head'),
             'activeTree'              => \Yii::t('skeeks/seo', 'Active flag to tree'),
             'activeContentElem'       => \Yii::t('skeeks/seo', 'Active flag to contents element'),
             'contentIds'              => \Yii::t('skeeks/cms', 'Elements of content'),
@@ -229,6 +237,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeHints()
     {
         return ArrayHelper::merge(parent::attributeHints(), [
+            'header_content'         => "Вставьте подвреждающие коды yandex webmaster и подобных систем. Этот код попадет между тегов head на странице.",
             'countersContent'         => \Yii::t('skeeks/seo',
                 'В это поле вы можете поставить любые коды счетчиков и сторонних систем (yandex.metrics jivosite google.metrics и прочие). Они будут выведены внизу страницы, перед закрывающим тегом body'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
@@ -296,6 +305,13 @@ HTML;
                 'class'  => FieldSet::class,
                 'name'   => \Yii::t('skeeks/seo', 'Codes counters'),
                 'fields' => [
+                    'header_content' => [
+                        'class'        => WidgetField::class,
+                        'widgetClass'  => \skeeks\widget\codemirror\CodemirrorWidget::class,
+                        'widgetConfig' => [
+                            'preset' => 'htmlmixed',
+                        ],
+                    ],
                     'countersContent' => [
                         'class'        => WidgetField::class,
                         'widgetClass'  => \skeeks\widget\codemirror\CodemirrorWidget::class,
@@ -503,6 +519,19 @@ HTML;
         });
 
         $application->view->on(View::EVENT_END_PAGE, function ($e) {
+
+            if ($this->header_content) {
+                if (BackendComponent::getCurrent() && BackendComponent::getCurrent()->id == 'backendAdmin') {
+                    return false;
+                }
+
+                $content = ob_get_clean();
+
+                echo strtr($content, [
+                    View::PH_HEAD => View::PH_HEAD . "\n\r" . $this->header_content,
+                ]);
+            }
+
             if ($this->_isTrigerEventCanUrl()) {
                 if ($this->canUrl) {
                     $this->canUrl->event_end_page($e);
