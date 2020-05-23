@@ -8,11 +8,21 @@
 
 namespace skeeks\cms\seo;
 
+use kartik\datecontrol\DateControl;
 use skeeks\cms\backend\BackendComponent;
+use skeeks\cms\backend\events\ViewRenderEvent;
+use skeeks\cms\backend\widgets\ActiveFormBackend;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
 use skeeks\cms\seo\assets\CmsSeoAsset;
 use skeeks\cms\seo\vendor\CanUrl;
+use skeeks\yii2\form\fields\BoolField;
+use skeeks\yii2\form\fields\FieldSet;
+use skeeks\yii2\form\fields\HtmlBlock;
+use skeeks\yii2\form\fields\NumberField;
+use skeeks\yii2\form\fields\SelectField;
+use skeeks\yii2\form\fields\TextareaField;
+use skeeks\yii2\form\fields\WidgetField;
 use yii\base\ActionEvent;
 use yii\base\BootstrapInterface;
 use yii\base\Event;
@@ -63,6 +73,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     const CANURL_DATA_FROM_MAIN_DOMAIN = '_can_url_from_main_domain';
 
     /**
+     * Добавление title ко всем страницам сайта
+     * @var string
+     */
+    public $title_append = "";
+    /**
      * Максимадбгая длина ключевых слов
      * @var int
      */
@@ -81,7 +96,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     /**
      * @var bool включить автогенерацию ключевых слов
      */
-    public $enableKeywordsGenerator = true;
+    public $enableKeywordsGenerator = false;
 
 
     /**
@@ -174,9 +189,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     static public function descriptorConfig()
     {
         return array_merge(parent::descriptorConfig(), [
-            'name' => \Yii::t('skeeks/seo', 'Seo'),
+            'name'  => \Yii::t('skeeks/seo', 'Seo'),
             'image' => [
-                CmsSeoAsset::class, 'icons/seo-icon.png'
+                CmsSeoAsset::class,
+                'icons/seo-icon.png',
             ],
         ]);
     }
@@ -189,6 +205,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             ['countersContent', 'string'],
             [['contentIds', 'treeTypeIds'], 'safe'],
             ['sitemap_min_date', 'integer'],
+            ['title_append', 'string'],
         ]);
     }
 
@@ -199,6 +216,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
             'robotsContent'           => 'Robots.txt',
+            'title_append'           => 'Добавление title ко всем страницам сайта',
             'countersContent'         => \Yii::t('skeeks/seo', 'Codes counters'),
             'activeTree'              => \Yii::t('skeeks/seo', 'Active flag to tree'),
             'activeContentElem'       => \Yii::t('skeeks/seo', 'Active flag to contents element'),
@@ -216,7 +234,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
-            'robotsContent'           => \Yii::t('skeeks/seo', 'This value is added to the automatically generated file robots.txt, in the case where it is not physically created on the server'),
+            'title_append'       => \Yii::t('skeeks/seo', 'Этот заголовок будет добавлен ко всем страницам вашего сайта. Именно добавлен после основного заголовка страницы.'),
+            'robotsContent'           => \Yii::t('skeeks/seo', 'Содержимое файла robots.txt'),
             'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo',
@@ -226,53 +245,137 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     }
 
 
-    public function renderConfigFormFields(ActiveForm $form)
+    /**
+     * @return ActiveForm
+     */
+    public function beginConfigForm()
     {
-        $result = $form->fieldSet(\Yii::t('skeeks/seo', 'Keywords'));
-
-        $result .= $form->field($this, 'enableKeywordsGenerator')->checkbox(\Yii::$app->formatter->booleanFormat);
-
-        $result .= $form->field($this, 'minKeywordLenth');
-        $result .= $form->field($this, 'maxKeywordsLength');
-
-
-        $result .= $form->fieldSetEnd();
-
-        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Indexing'));
-        $result .= $form->field($this, 'robotsContent')->textarea(['rows' => 7]);
-        $result .= $form->fieldSetEnd();
-
-        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Codes counters'));
-        $result .= $form->field($this, 'countersContent')->textarea(['rows' => 20]);
-        $result .= $form->fieldSetEnd();
-
-        $result .= $form->fieldSet(\Yii::t('skeeks/seo', 'Sitemap settings'));
-        $result .= $form->field($this, 'activeContentElem')->checkbox(\Yii::$app->formatter->booleanFormat);
-        $result .= $form->field($this, 'activeTree')->checkbox(\Yii::$app->formatter->booleanFormat);
-
-
-        $result .= $form->fieldSelectMulti($this, 'contentIds', \skeeks\cms\models\CmsContent::getDataForSelect());
-        /*echo $form->fieldSelectMulti($this, 'createdBy')->widget(
-            \skeeks\cms\modules\admin\widgets\formInputs\SelectModelDialogUserInput::className()
-        );*/
-
-        $result .= $form->fieldSelectMulti($this, 'treeTypeIds', \yii\helpers\ArrayHelper::map(
-            \skeeks\cms\models\CmsTreeType::find()->all(), 'id', 'name'
-        ));
-
-        $result .= $form->field($this, 'sitemap_min_date')->widget(\kartik\datecontrol\DateControl::classname(), [
-            'type' => \kartik\datecontrol\DateControl::FORMAT_DATE,
-        ]);
-
-        $result .= $form->fieldSetEnd();
-        return $result;
-
+        return ActiveFormBackend::begin();
     }
 
-
-    public function init()
+    /**
+     * @return array
+     */
+    public function getConfigFormFields()
     {
-        parent::init();
+        if (file_exists(\Yii::getAlias("@webroot/robots.txt"))) {
+            $robotsContent = file_get_contents(\Yii::getAlias("@webroot/robots.txt"));
+            $indexing = [
+                'robotsContent' => [
+                    'class'          => HtmlBlock::class,
+                    'content' => <<<HTML
+<p>Файл <b>robots.txt</b> создан на сервере. Если его удалить с серера, то настройки robots можно будет задавать в этом месте.</p>
+<p>Текущее содержимое файла robots:</p>
+<p><pre><code>{$robotsContent}</code></pre></p>
+HTML
+                ],
+            ];
+        } else {
+            $indexing = [
+                'robotsContent' => [
+                    'class'          => TextareaField::class,
+                    /*'on afterRender'          => function(ViewRenderEvent $e) {
+                        $e->content = <<<HTML
+<p style="text-align: center;">
+<a href="#" class="btn btn-secondary sx-generate-robots">Сгенерировать robots.txt</a>
+</p>
+HTML;
+
+                    },*/
+                    'elementOptions' => [
+                        'rows' => 15,
+                    ],
+                ],
+            ];
+        }
+
+
+
+        return [
+            'counters' => [
+                'class'  => FieldSet::class,
+                'name'   => \Yii::t('skeeks/seo', 'Codes counters'),
+                'fields' => [
+                    'countersContent' => [
+                        'class'        => WidgetField::class,
+                        'widgetClass'  => \skeeks\widget\codemirror\CodemirrorWidget::class,
+                        'widgetConfig' => [
+                            'preset' => 'htmlmixed',
+                        ],
+                    ],
+                ],
+            ],
+
+
+            'indexing' => [
+                'class'  => FieldSet::class,
+                'name'   => \Yii::t('skeeks/seo', 'Indexing'),
+                'fields' => $indexing,
+            ],
+
+            'titles' => [
+                'class'  => FieldSet::class,
+                'name'   => \Yii::t('skeeks/seo', 'Заголовки'),
+                'fields' => [
+                    'title_append',
+                ],
+            ],
+
+            'keywords' => [
+                'class'          => FieldSet::class,
+                'name'           => \Yii::t('skeeks/seo', 'Keywords'),
+                'elementOptions' => [
+                    'isOpen' => false,
+                ],
+                'fields'         => [
+                    'enableKeywordsGenerator' => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
+                    'minKeywordLenth'         => [
+                        'class' => NumberField::class,
+                    ],
+                    'maxKeywordsLength'       => [
+                        'class' => NumberField::class,
+                    ],
+                ],
+            ],
+
+            'sitemap' => [
+                'class'          => FieldSet::class,
+                'name'           => \Yii::t('skeeks/seo', 'Sitemap settings'),
+                'elementOptions' => [
+                    'isOpen' => false,
+                ],
+                'fields'         => [
+                    'activeContentElem' => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
+                    'activeTree'        => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
+                    'contentIds'        => [
+                        'class' => SelectField::class,
+                        'items' => \skeeks\cms\models\CmsContent::getDataForSelect(),
+                    ],
+                    'treeTypeIds'       => [
+                        'class' => SelectField::class,
+                        'items' => \yii\helpers\ArrayHelper::map(
+                            \skeeks\cms\models\CmsTreeType::find()->all(), 'id', 'name'
+                        ),
+                    ],
+                    'sitemap_min_date'  => [
+                        'class'        => WidgetField::class,
+                        'widgetClass'  => DateControl::class,
+                        'widgetConfig' => [
+                            'type' => \kartik\datecontrol\DateControl::FORMAT_DATE,
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 
 
@@ -390,6 +493,12 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 if ($this->canUrl) {
                     $this->canUrl->event_after_request($e);
                 }
+            }
+        });
+
+        $application->view->on(View::EVENT_BEGIN_PAGE, function ($e) {
+            if ($this->title_append) {
+                \Yii::$app->view->title = \Yii::$app->view->title . $this->title_append;
             }
         });
 
