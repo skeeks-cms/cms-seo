@@ -10,7 +10,6 @@ namespace skeeks\cms\seo;
 
 use kartik\datecontrol\DateControl;
 use skeeks\cms\backend\BackendComponent;
-use skeeks\cms\backend\events\ViewRenderEvent;
 use skeeks\cms\backend\widgets\ActiveFormBackend;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
@@ -194,9 +193,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     static public function descriptorConfig()
     {
         return array_merge(parent::descriptorConfig(), [
-            'name'  => \Yii::t('skeeks/seo', 'Seo'),
-            'description'  => 'Установка счетчиков, правка robots.txt, карта сайта',
-            'image' => [
+            'name'        => \Yii::t('skeeks/seo', 'Seo'),
+            'description' => 'Установка счетчиков, правка robots.txt, карта сайта',
+            'image'       => [
                 CmsSeoAsset::class,
                 'icons/seo-icon.png',
             ],
@@ -223,9 +222,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
             'robotsContent'           => 'Robots.txt',
-            'title_append'           => 'Добавление title ко всем страницам сайта',
+            'title_append'            => 'Добавление title ко всем страницам сайта',
             'countersContent'         => \Yii::t('skeeks/seo', 'Footer'),
-            'header_content'         => \Yii::t('skeeks/seo', 'Head'),
+            'header_content'          => \Yii::t('skeeks/seo', 'Head'),
             'activeTree'              => \Yii::t('skeeks/seo', 'Active flag to tree'),
             'activeContentElem'       => \Yii::t('skeeks/seo', 'Active flag to contents element'),
             'contentIds'              => \Yii::t('skeeks/cms', 'Elements of content'),
@@ -237,13 +236,13 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeHints()
     {
         return ArrayHelper::merge(parent::attributeHints(), [
-            'header_content'         => "Вставьте подвреждающие коды yandex webmaster и подобных систем. Этот код попадет между тегов head на странице.",
+            'header_content'          => "Вставьте подвреждающие коды yandex webmaster и подобных систем. Этот код попадет между тегов head на странице.",
             'countersContent'         => \Yii::t('skeeks/seo',
                 'В это поле вы можете поставить любые коды счетчиков и сторонних систем (yandex.metrics jivosite google.metrics и прочие). Они будут выведены внизу страницы, перед закрывающим тегом body'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'If the page is not specified keywords, they will generate is for her, according to certain rules automatically'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword, which is listed by the key (automatic generation)'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'The maximum length of the string of keywords (automatic generation)'),
-            'title_append'       => \Yii::t('skeeks/seo', 'Этот заголовок будет добавлен ко всем страницам вашего сайта. Именно добавлен после основного заголовка страницы.'),
+            'title_append'            => \Yii::t('skeeks/seo', 'Этот заголовок будет добавлен ко всем страницам вашего сайта. Именно добавлен после основного заголовка страницы.'),
             'robotsContent'           => \Yii::t('skeeks/seo', 'Содержимое файла robots.txt'),
             'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
@@ -271,12 +270,13 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             $robotsContent = file_get_contents(\Yii::getAlias("@webroot/robots.txt"));
             $indexing = [
                 'robotsContent' => [
-                    'class'          => HtmlBlock::class,
+                    'class'   => HtmlBlock::class,
                     'content' => <<<HTML
 <p>Файл <b>robots.txt</b> создан на сервере. Если его удалить с серера, то настройки robots можно будет задавать в этом месте.</p>
 <p>Текущее содержимое файла robots:</p>
 <p><pre><code>{$robotsContent}</code></pre></p>
 HTML
+    ,
                 ],
             ];
         } else {
@@ -299,13 +299,12 @@ HTML;
         }
 
 
-
         return [
             'counters' => [
                 'class'  => FieldSet::class,
                 'name'   => \Yii::t('skeeks/seo', 'Codes counters'),
                 'fields' => [
-                    'header_content' => [
+                    'header_content'  => [
                         'class'        => WidgetField::class,
                         'widgetClass'  => \skeeks\widget\codemirror\CodemirrorWidget::class,
                         'widgetConfig' => [
@@ -417,7 +416,13 @@ HTML;
                 }
             }
 
-            if (!BackendComponent::getCurrent() && !in_array(\Yii::$app->controller->module->id, ['debug', 'gii']) && $this->isAutoIncludecountersContent) {
+            if (
+                !BackendComponent::getCurrent()
+                && !in_array(\Yii::$app->controller->module->id, ['debug', 'gii'])
+                && $this->isAutoIncludecountersContent
+                && !\Yii::$app->request->isPjax
+                && !\Yii::$app->request->isAjax
+            ) {
                 if ($this->countersContent) {
                     $content = ob_get_contents();
                     if (strpos($content, $this->countersContent) === false) {
@@ -514,14 +519,18 @@ HTML;
 
         $application->view->on(View::EVENT_BEGIN_PAGE, function ($e) {
             if ($this->title_append) {
-                \Yii::$app->view->title = \Yii::$app->view->title . $this->title_append;
+                \Yii::$app->view->title = \Yii::$app->view->title.$this->title_append;
             }
         });
 
-        $application->view->on(View::EVENT_END_PAGE, function ($e) {
+        /*$application->view->on(View::EVENT_END_PAGE, function ($e) {
 
             if ($this->header_content) {
                 if (BackendComponent::getCurrent() && BackendComponent::getCurrent()->id == 'backendAdmin') {
+                    return false;
+                }
+                
+                if (\Yii::$app->request->isPjax || \Yii::$app->request->isAjax) {
                     return false;
                 }
 
@@ -531,6 +540,30 @@ HTML;
                     View::PH_HEAD => View::PH_HEAD . "\n\r" . $this->header_content,
                 ]);
             }
+        });*/
+
+
+        $application->response->on(\yii\web\Response::EVENT_BEFORE_SEND, function (\yii\base\Event $event) {
+            $response = $event->sender;
+
+            if (!$this->header_content) {
+                return false;
+            }
+
+            if (BackendComponent::getCurrent() && BackendComponent::getCurrent()->id == 'backendAdmin') {
+                return false;
+            }
+
+            if (\Yii::$app->request->isPjax || \Yii::$app->request->isAjax) {
+                return false;
+            }
+
+            $response->data = strtr($response->data, [
+                "</head>" => "\n\r".$this->header_content."\n\r</head>",
+            ]);
+        });
+
+        $application->view->on(View::EVENT_END_PAGE, function ($e) {
 
             if ($this->_isTrigerEventCanUrl()) {
                 if ($this->canUrl) {
