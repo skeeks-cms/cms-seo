@@ -133,7 +133,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     /**
      * @var int
      */
-    public $sitemap_min_date;
+    public $sitemap_min_date = 1593591722;
 
     /**
      * @var string
