@@ -9,6 +9,7 @@
 namespace skeeks\cms\seo\controllers;
 
 use skeeks\cms\models\CmsContentElement;
+use skeeks\cms\models\CmsTree;
 use skeeks\cms\models\Tree;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -33,15 +34,24 @@ class SitemapController extends Controller
         $this->_addElements($result);
         $this->_addAdditional($result);
 
-        \Yii::$app->response->format = Response::FORMAT_XML;
-        $this->layout = false;
 
-        //Генерация sitemap вручную, не используем XmlResponseFormatter
-        \Yii::$app->response->content = $this->render($this->action->id, [
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+        \Yii::$app->response->headers->add('Content-Type', 'text/xml');
+        return $this->renderPartial($this->action->id, [
             'data' => $result
         ]);
 
-        return;
+        /*\Yii::$app->response->format = Response::FORMAT_XML;
+        $this->layout = false;
+
+        //Генерация sitemap вручную, не используем XmlResponseFormatter
+        $content = $this->render($this->action->id, [
+            'data' => $result
+        ]);
+
+        \Yii::$app->response->content = $content;
+
+        return $content;*/
     }
 
     /**
@@ -50,10 +60,10 @@ class SitemapController extends Controller
      */
     protected function _addTrees(&$data = [])
     {
-        $query = Tree::find()->where(['cms_site_id' => \Yii::$app->skeeks->site->id]);
+        $query = CmsTree::find()->cmsSite();
 
         if (\Yii::$app->seo->activeTree) {
-            $query->andWhere(['active' => 'Y']);
+            $query->active();
         }
 
         if (\Yii::$app->seo->treeTypeIds) {
@@ -76,6 +86,7 @@ class SitemapController extends Controller
                 }
             }
         }
+
 
         return $this;
     }
