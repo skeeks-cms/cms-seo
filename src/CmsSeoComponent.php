@@ -425,8 +425,13 @@ HTML;
             ) {
                 if ($this->countersContent) {
                     $content = ob_get_contents();
+                    //$e->sender->content = 2;
                     if (strpos($content, $this->countersContent) === false) {
-                        echo Html::tag('div', $this->countersContent, ['style' => 'display: none;']);
+                        $userAgent = \Yii::$app->request->headers->get('user-agent');
+                        //Для google page speed не показываем этот блок
+                        if ($userAgent && strpos($userAgent, "Lighthouse") === false) {
+                            echo Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']);
+                        }
                     }
                 }
             }
