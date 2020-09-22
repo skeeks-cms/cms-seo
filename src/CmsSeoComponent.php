@@ -427,9 +427,8 @@ HTML;
                     $content = ob_get_contents();
                     //$e->sender->content = 2;
                     if (strpos($content, $this->countersContent) === false) {
-                        $userAgent = \Yii::$app->request->headers->get('user-agent');
                         //Для google page speed не показываем этот блок
-                        if ($userAgent && strpos($userAgent, "Lighthouse") === false) {
+                        if (!$this->isGooglePageSpeedRequest()) {
                             echo Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']);
                         }
                     }
@@ -555,6 +554,10 @@ HTML;
                 return false;
             }
 
+            if ($this->isGooglePageSpeedRequest()) {
+                return false;
+            }
+
             if (BackendComponent::getCurrent() && BackendComponent::getCurrent()->id == 'backendAdmin') {
                 return false;
             }
@@ -577,6 +580,19 @@ HTML;
 
             }
         });
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGooglePageSpeedRequest()
+    {
+        $userAgent = \Yii::$app->request->headers->get('user-agent');
+        if ($userAgent && strpos($userAgent, "Lighthouse") !== false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
