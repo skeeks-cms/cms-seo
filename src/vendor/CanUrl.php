@@ -16,7 +16,6 @@ use yii\base\Exception;
 use yii\base\InvalidParamException;
 use yii\base\UserException;
 use yii\helpers\ArrayHelper;
-use yii\helpers\Url;
 use yii\web\Application;
 use yii\web\View;
 
@@ -117,7 +116,10 @@ class CanUrl extends Component implements BootstrapInterface
 
         /** @var \yii\web\View $view */
         $view = $event->sender;
-        $view->linkTags['canonical'] = '<link rel="canonical" href="'.$canurl.'"/>';
+        if (!\Yii::$app->request->isPjax && !\Yii::$app->request->isAjax) {
+            $view->linkTags['canonical'] = '<link rel="canonical" href="'.$canurl.'"/>';
+        }
+
 
         $this->if_need_then_send_redirect(true);
     }
