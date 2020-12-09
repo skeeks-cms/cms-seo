@@ -555,9 +555,10 @@ HTML;
                 return false;
             }*/
 
-            if (in_array(\Yii::$app->controller->module->id, ['debug', 'gii'])) {
+            //TODO: это иногда дает ошибку нельзя тут оставлять
+            /*if (in_array(\Yii::$app->controller->module->id, ['debug', 'gii'])) {
                 return false;
-            }
+            }*/
 
             if ($this->isGooglePageSpeedRequest()) {
                 return false;
