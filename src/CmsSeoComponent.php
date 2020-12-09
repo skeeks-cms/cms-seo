@@ -416,7 +416,7 @@ HTML;
                 }
             }
 
-            if (
+            /*if (
                 !BackendComponent::getCurrent()
                 && !in_array(\Yii::$app->controller->module->id, ['debug', 'gii'])
                 && $this->isAutoIncludecountersContent
@@ -429,11 +429,12 @@ HTML;
                     if (strpos($content, $this->countersContent) === false) {
                         //Для google page speed не показываем этот блок
                         if (!$this->isGooglePageSpeedRequest()) {
+                            //echo str_replace("</body>", Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']) . "</body>", $content);
                             echo Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']);
                         }
                     }
                 }
-            }
+            }*/
         });
 
 
@@ -550,7 +551,11 @@ HTML;
         $application->response->on(\yii\web\Response::EVENT_BEFORE_SEND, function (\yii\base\Event $event) {
             $response = $event->sender;
 
-            if (!$this->header_content) {
+            /*if (!$this->header_content) {
+                return false;
+            }*/
+
+            if (in_array(\Yii::$app->controller->module->id, ['debug', 'gii'])) {
                 return false;
             }
 
@@ -566,9 +571,24 @@ HTML;
                 return false;
             }
 
-            $response->data = strtr($response->data, [
-                "</head>" => "\n\r".$this->header_content."\n\r</head>",
-            ]);
+            $replaces = [];
+
+            if ($this->header_content) {
+                $replaces["</head>"] = "\n\r".$this->header_content."\n\r</head>";
+            }
+
+
+            if (strpos($response->data, $this->countersContent) === false) {
+                //Для google page speed не показываем этот блок
+                if (!$this->isGooglePageSpeedRequest()) {
+                    $replaces["</body>"] = Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']) . "</body>";
+                }
+            }
+
+            if ($replaces) {
+                $response->data = strtr($response->data, $replaces);
+            }
+
         });
 
         $application->view->on(View::EVENT_END_PAGE, function ($e) {
