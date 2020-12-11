@@ -579,12 +579,15 @@ HTML;
             }
 
 
-            if (strpos($response->data, $this->countersContent) === false) {
-                //Для google page speed не показываем этот блок
-                if (!$this->isGooglePageSpeedRequest()) {
-                    $replaces["</body>"] = Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']) . "</body>";
+            if ($this->countersContent) {
+                if (strpos($response->data, $this->countersContent) === false) {
+                    //Для google page speed не показываем этот блок
+                    if (!$this->isGooglePageSpeedRequest()) {
+                        $replaces["</body>"] = Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']) . "</body>";
+                    }
                 }
             }
+
 
             if ($replaces) {
                 $response->data = strtr($response->data, $replaces);
