@@ -26,7 +26,7 @@ class SitemapController extends Controller
      */
     public function actionOnRequest()
     {
-        ini_set("memory_limit", "512M");
+        ini_set("memory_limit", "1024M");
 
         $result = [];
 
