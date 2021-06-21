@@ -18,8 +18,11 @@ HTML;
         <url>
             <loc><?= $item['loc']; ?></loc>
             <? if (isset($item['lastmod'])) : ?>
-                <lastmod><?= $item['lastmod']; ?></lastmod><? endif; ?>
-
+                <lastmod><?= $item['lastmod']; ?></lastmod>
+            <? endif; ?>
+            <? if (isset($item['priority'])) : ?>
+                <priority><?= $item['priority']; ?></priority>
+            <? endif; ?>
         </url>
     <? endforeach; ?>
 </urlset>

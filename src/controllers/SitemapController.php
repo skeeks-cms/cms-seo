@@ -13,7 +13,6 @@ use skeeks\cms\models\CmsTree;
 use skeeks\cms\models\Tree;
 use yii\helpers\Url;
 use yii\web\Controller;
-use yii\web\Response;
 
 /**
  * Class SitemapController
@@ -38,7 +37,7 @@ class SitemapController extends Controller
         \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
         \Yii::$app->response->headers->add('Content-Type', 'text/xml');
         return $this->renderPartial($this->action->id, [
-            'data' => $result
+            'data' => $result,
         ]);
 
         /*\Yii::$app->response->format = Response::FORMAT_XML;
@@ -78,11 +77,16 @@ class SitemapController extends Controller
              */
             foreach ($trees as $tree) {
                 if (!$tree->redirect && !$tree->redirect_tree_id) {
-                    $data[] =
-                        [
-                            "loc" => $tree->absoluteUrl,
-                            "lastmod" => $this->_lastMod($tree),
-                        ];
+                    $tmp = [
+                        "loc"     => $tree->absoluteUrl,
+                        "lastmod" => $this->_lastMod($tree),
+                    ];
+
+                    if (\Yii::$app->seo->is_sitemap_priority) {
+                        $tmp['priority'] = $this->_calculatePriority($tree);
+                    }
+
+                    $data[] = $tmp;
                 }
             }
         }
@@ -114,11 +118,11 @@ class SitemapController extends Controller
     {
         $query = CmsContentElement::find()
             ->joinWith('cmsTree')
-            ->andWhere([Tree::tableName() . '.cms_site_id' => \Yii::$app->skeeks->site->id]);
+            ->andWhere([Tree::tableName().'.cms_site_id' => \Yii::$app->skeeks->site->id]);
 
 
         if (\Yii::$app->seo->activeContentElem) {
-            $query->andWhere([CmsContentElement::tableName() . '.active' => 'Y']);
+            $query->andWhere([CmsContentElement::tableName().'.active' => 'Y']);
         }
 
         if (\Yii::$app->seo->contentIds) {
@@ -133,11 +137,16 @@ class SitemapController extends Controller
              * @var CmsContentElement $model
              */
             foreach ($elements as $model) {
-                $data[] =
-                    [
-                        "loc" => $model->absoluteUrl,
-                        "lastmod" => $this->_lastMod($model),
-                    ];
+                $tmp = [
+                    "loc"     => $model->absoluteUrl,
+                    "lastmod" => $this->_lastMod($model),
+                ];
+
+                if (\Yii::$app->seo->is_sitemap_priority) {
+                    $tmp['priority'] = '0.8';
+                }
+
+                $data[] = $tmp;
             }
         }
 
@@ -151,7 +160,7 @@ class SitemapController extends Controller
     protected function _addAdditional(&$data = [])
     {
         $data[] = [
-            'loc' => Url::to(['/cms/cms/index'], true)
+            'loc' => Url::to(['/cms/cms/index'], true),
         ];
 
         return $this;

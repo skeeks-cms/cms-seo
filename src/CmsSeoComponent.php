@@ -97,6 +97,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      */
     public $enableKeywordsGenerator = false;
 
+    /**
+     * @var bool добавлять приоритет в sitemap?
+     */
+    public $is_sitemap_priority = false;
+
 
     /**
      * @var string если файла robots.txt нет физически, то он формируется динамически с этим содержимым
@@ -205,7 +210,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function rules()
     {
         return ArrayHelper::merge(parent::rules(), [
-            [['enableKeywordsGenerator', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree'], 'integer'],
+            [['enableKeywordsGenerator', 'is_sitemap_priority', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree'], 'integer'],
             ['robotsContent', 'string'],
             ['countersContent', 'string'],
             ['header_content', 'string'],
@@ -218,6 +223,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeLabels()
     {
         return ArrayHelper::merge(parent::attributeLabels(), [
+            'is_sitemap_priority' => \Yii::t('skeeks/seo', 'Добавлять priority в sitemap?'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'Automatic generation of keywords'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
@@ -363,6 +369,10 @@ HTML;
                     'isOpen' => false,
                 ],
                 'fields'         => [
+                    'is_sitemap_priority' => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
                     'activeContentElem' => [
                         'class'     => BoolField::class,
                         'allowNull' => false,
