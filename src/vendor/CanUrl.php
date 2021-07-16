@@ -93,6 +93,7 @@ class CanUrl extends Component implements BootstrapInterface
 
 
         'clid'       => null,
+        'gclid'      => null,
         'yclid'      => null,
         'ymclid'     => null,
         'frommarket' => null,
