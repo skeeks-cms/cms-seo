@@ -9,6 +9,7 @@
 namespace skeeks\cms\seo\controllers;
 
 use skeeks\cms\models\CmsContentElement;
+use skeeks\cms\models\CmsSavedFilter;
 use skeeks\cms\models\CmsTree;
 use skeeks\cms\models\Tree;
 use yii\helpers\Url;
@@ -30,6 +31,7 @@ class SitemapController extends Controller
         $result = [];
 
         $this->_addTrees($result);
+        $this->_addSavedFilters($result);
         $this->_addElements($result);
         $this->_addAdditional($result);
 
@@ -39,18 +41,6 @@ class SitemapController extends Controller
         return $this->renderPartial($this->action->id, [
             'data' => $result,
         ]);
-
-        /*\Yii::$app->response->format = Response::FORMAT_XML;
-        $this->layout = false;
-
-        //Генерация sitemap вручную, не используем XmlResponseFormatter
-        $content = $this->render($this->action->id, [
-            'data' => $result
-        ]);
-
-        \Yii::$app->response->content = $content;
-
-        return $content;*/
     }
 
     /**
@@ -88,6 +78,37 @@ class SitemapController extends Controller
 
                     $data[] = $tmp;
                 }
+            }
+        }
+
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addSavedFilters(&$data = [])
+    {
+        $query = CmsSavedFilter::find()->cmsSite();
+        $savedFilters = $query->all();
+
+        if ($savedFilters) {
+            /**
+             * @var CmsSavedFilter $savedFilter
+             */
+            foreach ($savedFilters as $savedFilter) {
+                $tmp = [
+                    "loc"     => $savedFilter->absoluteUrl,
+                    "lastmod" => $this->_lastMod($savedFilter),
+                ];
+
+                if (\Yii::$app->seo->is_sitemap_priority) {
+                    $tmp['priority'] = '0.8';
+                }
+
+                $data[] = $tmp;
             }
         }
 

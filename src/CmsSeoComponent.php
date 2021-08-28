@@ -771,7 +771,7 @@ HTML;
     public $canUrlEnableDefaultControllers = [
         'cms/tree',
         'cms/content-element',
-        'savedFilters/saved-filters',
+        'cms/saved-filter',
     ];
 
     public function _isTrigerEventCanUrl()
