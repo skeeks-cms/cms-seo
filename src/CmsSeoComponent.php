@@ -772,6 +772,7 @@ HTML;
         'cms/tree',
         'cms/content-element',
         'cms/saved-filter',
+        'cms/cms',
     ];
 
     public function _isTrigerEventCanUrl()
