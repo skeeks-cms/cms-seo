@@ -574,7 +574,9 @@ HTML;
                 return false;
             }
 
-            if (BackendComponent::getCurrent() && BackendComponent::getCurrent()->id == 'backendAdmin') {
+            if (BackendComponent::getCurrent()
+                //&& BackendComponent::getCurrent()->id == 'backendAdmin'
+            ) {
                 return false;
             }
 
