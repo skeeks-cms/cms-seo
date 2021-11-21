@@ -538,37 +538,10 @@ HTML;
             }
         });
 
-        /*$application->view->on(View::EVENT_END_PAGE, function ($e) {
-
-            if ($this->header_content) {
-                if (BackendComponent::getCurrent() && BackendComponent::getCurrent()->id == 'backendAdmin') {
-                    return false;
-                }
-                
-                if (\Yii::$app->request->isPjax || \Yii::$app->request->isAjax) {
-                    return false;
-                }
-
-                $content = ob_get_clean();
-
-                echo strtr($content, [
-                    View::PH_HEAD => View::PH_HEAD . "\n\r" . $this->header_content,
-                ]);
-            }
-        });*/
 
 
         $application->response->on(\yii\web\Response::EVENT_BEFORE_SEND, function (\yii\base\Event $event) {
             $response = $event->sender;
-
-            /*if (!$this->header_content) {
-                return false;
-            }*/
-
-            //TODO: это иногда дает ошибку нельзя тут оставлять
-            /*if (in_array(\Yii::$app->controller->module->id, ['debug', 'gii'])) {
-                return false;
-            }*/
 
             if ($this->isGooglePageSpeedRequest()) {
                 return false;
