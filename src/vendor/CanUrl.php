@@ -68,6 +68,7 @@ class CanUrl extends Component implements BootstrapInterface
     public $is_track_ajax = false;
     public $is_track_pjax = false;
     public $is_track_flash = false;
+    public $is_soret_query_params = false;
     protected $_scheme;
     protected $_user = '';
     protected $_pass = '';
@@ -173,7 +174,7 @@ class CanUrl extends Component implements BootstrapInterface
         }
 
         $this_query_params = $this->_query_params;
-        ksort($this_query_params);
+        //ksort($this_query_params);
         $rett_params = $this_query_params;
 
         return UrlHelper::build_query($rett_params);
@@ -248,6 +249,8 @@ class CanUrl extends Component implements BootstrapInterface
 
         //\Yii::info("parsed_current_url = " . print_r($parsed_current_url, true), self::class);
         $redirurl = $this->GETredirurl($parsed_current_url, $is_final);
+        
+        //print_r($redirurl);die;
 
         //\Yii::info("redirurl = {$redirurl}", self::class);
         //\Yii::info("this = " . print_r($this, true), self::class);
@@ -372,25 +375,42 @@ class CanUrl extends Component implements BootstrapInterface
         ksort($this_query_params);
         $rett_params = $this_query_params;
 
-        $this_important_params = (isset($this->_important_params) ? $this->_important_params : []);
-        ksort($this_important_params);
-        foreach ($this_important_params as $kkk => $vvv) {
-            if (!isset($vvv) AND array_key_exists($kkk, $current_params)) {
-                $vvv = $current_params[$kkk];
-            }
-            $rett_params[$kkk] = $vvv;
-        }
-
+         $this_important_params = (isset($this->_important_params) ? $this->_important_params : []);
         $this_minor_params = (isset($this->_minor_params) ? $this->_minor_params : []);
-        ksort($this_minor_params);
-        foreach ($this_minor_params as $kkk => $vvv) {
-            if (!isset($vvv) AND array_key_exists($kkk, $current_params)) {
-                $vvv = $current_params[$kkk];
+
+        if ($this->is_soret_query_params === false) {
+
+            if ($current_params) {
+                $this_all_base_prams = ArrayHelper::merge($this_important_params, $this_minor_params);
+
+                foreach ($current_params as $key => $val)
+                {
+                    if (array_key_exists($key, $this_all_base_prams)) {
+                        $rett_params[$key] = $val;
+                    }
+                }
             }
-            $rett_params[$kkk] = $vvv;
+        } else {
+            ksort($this_important_params);
+            foreach ($this_important_params as $kkk => $vvv) {
+                if (!isset($vvv) AND array_key_exists($kkk, $current_params)) {
+                    $vvv = $current_params[$kkk];
+                }
+                $rett_params[$kkk] = $vvv;
+            }
+    
+            ksort($this_minor_params);
+            foreach ($this_minor_params as $kkk => $vvv) {
+                if (!isset($vvv) AND array_key_exists($kkk, $current_params)) {
+                    $vvv = $current_params[$kkk];
+                }
+                $rett_params[$kkk] = $vvv;
+            }
         }
 
-        return UrlHelper::build_query($rett_params);
+        $res = UrlHelper::build_query($rett_params);
+        
+        return $res;
     }
     public function event_after_request(Event $event)
     {
