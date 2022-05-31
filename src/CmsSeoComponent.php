@@ -644,6 +644,9 @@ HTML;
             return false;
         }
 
+        //print_r($_SERVER);die;
+        //var_dump($_SERVER['HTTPS']);die;
+        //print_r(\Yii::$app->getRequest()->getAbsoluteUrl());die;
         /**
          * Хост может быть не указан, тогда будет взят из запроса
          */
@@ -673,6 +676,8 @@ HTML;
         if (!$this->canUrl->scheme) {
             $this->canUrl->scheme = \Yii::$app->request->isSecureConnection ? "https" : "http";
         }
+
+        //print_r($this->canUrl);die;
 
 
         if (\Yii::$app->requestedRoute) {
