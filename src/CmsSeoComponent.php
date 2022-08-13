@@ -373,14 +373,14 @@ HTML;
                         'class'     => BoolField::class,
                         'allowNull' => false,
                     ],
-                    'activeContentElem' => [
+                    /*'activeContentElem' => [
                         'class'     => BoolField::class,
                         'allowNull' => false,
                     ],
                     'activeTree'        => [
                         'class'     => BoolField::class,
                         'allowNull' => false,
-                    ],
+                    ],*/
                     'contentIds'        => [
                         'class' => SelectField::class,
                         'items' => \skeeks\cms\models\CmsContent::getDataForSelect(),

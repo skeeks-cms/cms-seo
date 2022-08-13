@@ -50,10 +50,45 @@ class SitemapController extends Controller
     protected function _addTrees(&$data = [])
     {
         $query = CmsTree::find()->cmsSite();
+        $query->andWhere([
+            'and',
+            [
+                'redirect_tree_id' => null,
+            ],
+            [
+                'redirect_content_element_id' => null,
+            ],
+            [
+                'redirect_saved_filter_id' => null,
+            ],
+            [
+                'or',
+                ['redirect' => null],
+                ['redirect' => ""]
+            ]
+        ]);
 
-        if (\Yii::$app->seo->activeTree) {
-            $query->active();
-        }
+        $query->andWhere([
+            'and',
+            [
+                'canonical_tree_id' => null,
+            ],
+            [
+                'canonical_content_element_id' => null,
+            ],
+            [
+                'canonical_saved_filter_id' => null,
+            ],
+            [
+                'or',
+                ['canonical_link' => null],
+                ['canonical_link' => ""]
+            ]
+        ]);
+        
+        $query->andWhere([
+                'is_index' => 1,
+        ]);
 
         if (\Yii::$app->seo->treeTypeIds) {
             $query->andWhere(['tree_type_id' => \Yii::$app->seo->treeTypeIds]);
@@ -66,7 +101,7 @@ class SitemapController extends Controller
              * @var Tree $tree
              */
             foreach ($trees as $tree) {
-                if (!$tree->redirect && !$tree->redirect_tree_id) {
+                //if (!$tree->redirect && !$tree->redirect_tree_id) {
                     $tmp = [
                         "loc"     => $tree->absoluteUrl,
                         "lastmod" => $this->_lastMod($tree),
@@ -77,7 +112,7 @@ class SitemapController extends Controller
                     }
 
                     $data[] = $tmp;
-                }
+                //}
             }
         }
 
