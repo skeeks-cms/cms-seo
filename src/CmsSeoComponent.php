@@ -105,7 +105,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     /**
      * @var bool Делать картинки webp при ресайзе?
      */
-    public $is_webp = 1;
+    public $is_webp = 0;
 
     /**
      * @var string если файла robots.txt нет физически, то он формируется динамически с этим содержимым
