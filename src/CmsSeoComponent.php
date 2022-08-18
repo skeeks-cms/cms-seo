@@ -102,6 +102,10 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      */
     public $is_sitemap_priority = false;
 
+    /**
+     * @var bool Делать картинки webp при ресайзе?
+     */
+    public $is_webp = 1;
 
     /**
      * @var string если файла robots.txt нет физически, то он формируется динамически с этим содержимым
@@ -217,6 +221,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             [['contentIds', 'treeTypeIds'], 'safe'],
             ['sitemap_min_date', 'integer'],
             ['title_append', 'string'],
+            ['is_webp', 'integer'],
         ]);
     }
 
@@ -236,6 +241,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'contentIds'              => \Yii::t('skeeks/cms', 'Elements of content'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'Types of tree'),
+            'is_webp'             => \Yii::t('skeeks/seo', 'Использовать .webp сжатие картинок?'),
         ]);
     }
 
@@ -252,8 +258,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'robotsContent'           => \Yii::t('skeeks/seo', 'Содержимое файла robots.txt'),
             'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
-            'sitemap_min_date'        => \Yii::t('skeeks/seo',
-                'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
+            'is_webp'             => \Yii::t('skeeks/seo', 'Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
+            'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
 
         ]);
     }
@@ -308,7 +314,7 @@ HTML;
         return [
             'counters' => [
                 'class'  => FieldSet::class,
-                'name'   => \Yii::t('skeeks/seo', 'Codes counters'),
+                'name'   => \Yii::t('skeeks/seo', 'Коды и счетчики'),
                 'fields' => [
                     'header_content'  => [
                         'class'        => WidgetField::class,
@@ -342,6 +348,19 @@ HTML;
                 ],
             ],
 
+            'optimize' => [
+                'class'          => FieldSet::class,
+                'name'           => \Yii::t('skeeks/seo', 'Оптимизация'),
+                'elementOptions' => [
+                    'isOpen' => false,
+                ],
+                'fields'         => [
+                    'is_webp' => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
+                ],
+            ],
             'keywords' => [
                 'class'          => FieldSet::class,
                 'name'           => \Yii::t('skeeks/seo', 'Keywords'),
