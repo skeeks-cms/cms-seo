@@ -920,4 +920,30 @@ HTML;
         return $contentNewResult.$content;
     }
 
+    /**
+     * @return $this
+     */
+    public function setNoIndexNoFollow()
+    {
+        \Yii::$app->view->registerMetaTag([
+            'name' => 'robots',
+            'content' => 'noindex, nofollow'
+        ], "robots");
+
+        return $this;
+    }
+
+    /**
+     * @param string $canonicalUrl
+     * @return $this
+     */
+    public function setCanonical(string $canonicalUrl)
+    {
+        \Yii::$app->view->registerLinkTag([
+            'rel' => 'canonical',
+            'href' => $canonicalUrl
+        ], "canonical");
+
+        return $this;
+    }
 }
