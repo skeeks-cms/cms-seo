@@ -108,6 +108,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public $is_webp = 0;
 
     /**
+     * @var int
+     */
+    public $is_mobile_webp = 1;
+
+    /**
      * @var string если файла robots.txt нет физически, то он формируется динамически с этим содержимым
      */
     public $robotsContent = "User-agent: *";
@@ -222,13 +227,14 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             ['sitemap_min_date', 'integer'],
             ['title_append', 'string'],
             ['is_webp', 'integer'],
+            ['is_mobile_webp', 'integer'],
         ]);
     }
 
     public function attributeLabels()
     {
         return ArrayHelper::merge(parent::attributeLabels(), [
-            'is_sitemap_priority' => \Yii::t('skeeks/seo', 'Добавлять priority в sitemap?'),
+            'is_sitemap_priority'     => \Yii::t('skeeks/seo', 'Добавлять priority в sitemap?'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'Automatic generation of keywords'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
@@ -241,7 +247,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'contentIds'              => \Yii::t('skeeks/cms', 'Elements of content'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'Types of tree'),
-            'is_webp'             => \Yii::t('skeeks/seo', 'Использовать .webp сжатие картинок?'),
+            'is_webp'                 => \Yii::t('skeeks/seo', 'Использовать .webp сжатие картинок?'),
+            'is_mobile_webp'          => \Yii::t('skeeks/seo', 'Использовать .webp сжатие картинок в мобильном телефоне?'),
         ]);
     }
 
@@ -258,7 +265,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'robotsContent'           => \Yii::t('skeeks/seo', 'Содержимое файла robots.txt'),
             'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
-            'is_webp'             => \Yii::t('skeeks/seo', 'Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
+            'is_webp'                 => \Yii::t('skeeks/seo',
+                'Опция для компьютеров. Внимание в старых safari не работает! Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
+            'is_mobile_webp'          => \Yii::t('skeeks/seo', 'Опция работает в мобильном телефоне. Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
 
         ]);
@@ -288,7 +297,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 <p>Текущее содержимое файла robots:</p>
 <p><pre><code>{$robotsContent}</code></pre></p>
 HTML
-    ,
+                    ,
                 ],
             ];
         } else {
@@ -359,6 +368,10 @@ HTML;
                         'class'     => BoolField::class,
                         'allowNull' => false,
                     ],
+                    'is_mobile_webp' => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
                 ],
             ],
             'keywords' => [
@@ -400,17 +413,17 @@ HTML;
                         'class'     => BoolField::class,
                         'allowNull' => false,
                     ],*/
-                    'contentIds'        => [
+                    'contentIds'          => [
                         'class' => SelectField::class,
                         'items' => \skeeks\cms\models\CmsContent::getDataForSelect(),
                     ],
-                    'treeTypeIds'       => [
+                    'treeTypeIds'         => [
                         'class' => SelectField::class,
                         'items' => \yii\helpers\ArrayHelper::map(
                             \skeeks\cms\models\CmsTreeType::find()->all(), 'id', 'name'
                         ),
                     ],
-                    'sitemap_min_date'  => [
+                    'sitemap_min_date'    => [
                         'class'        => WidgetField::class,
                         'widgetClass'  => DateControl::class,
                         'widgetConfig' => [
@@ -558,7 +571,6 @@ HTML;
         });
 
 
-
         $application->response->on(\yii\web\Response::EVENT_BEFORE_SEND, function (\yii\base\Event $event) {
             $response = $event->sender;
 
@@ -588,7 +600,7 @@ HTML;
                     if (strpos($response->data, $this->countersContent) === false) {
                         //Для google page speed не показываем этот блок
                         if (!$this->isGooglePageSpeedRequest()) {
-                            $replaces["</body>"] = Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true']) . "</body>";
+                            $replaces["</body>"] = Html::tag('div', $this->countersContent, ['style' => 'display: none;', 'data-is-auto' => 'true'])."</body>";
                         }
                     }
                 }
@@ -926,8 +938,8 @@ HTML;
     public function setNoIndexNoFollow()
     {
         \Yii::$app->view->registerMetaTag([
-            'name' => 'robots',
-            'content' => 'noindex, nofollow'
+            'name'    => 'robots',
+            'content' => 'noindex, nofollow',
         ], "robots");
 
         return $this;
@@ -940,8 +952,8 @@ HTML;
     public function setCanonical(string $canonicalUrl)
     {
         \Yii::$app->view->registerLinkTag([
-            'rel' => 'canonical',
-            'href' => $canonicalUrl
+            'rel'  => 'canonical',
+            'href' => $canonicalUrl,
         ], "canonical");
 
         return $this;
