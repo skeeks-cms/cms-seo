@@ -219,7 +219,9 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function rules()
     {
         return ArrayHelper::merge(parent::rules(), [
-            [['enableKeywordsGenerator', 'is_sitemap_priority', 'minKeywordLenth', 'maxKeywordsLength', 'activeContentElem', 'activeTree'], 'integer'],
+            [['enableKeywordsGenerator', 'is_sitemap_priority', 'minKeywordLenth', 'maxKeywordsLength', 
+                //'activeContentElem', 'activeTree'
+            ], 'integer'],
             ['robotsContent', 'string'],
             ['countersContent', 'string'],
             ['header_content', 'string'],

@@ -173,13 +173,17 @@ class SitemapController extends Controller
     protected function _addElements(&$data = [])
     {
         $query = CmsContentElement::find()
-            ->joinWith('cmsTree')
-            ->andWhere([Tree::tableName().'.cms_site_id' => \Yii::$app->skeeks->site->id]);
+            ->cmsSite()->active()
+            ->innerJoinWith("cmsContent as cmsContent")
+            ->andWhere(['cmsContent.is_have_page' => 1])
+        ;
+            //->joinWith('cmsTree')
+            //->andWhere([Tree::tableName().'.cms_site_id' => \Yii::$app->skeeks->site->id])
+        ;
 
-
-        if (\Yii::$app->seo->activeContentElem) {
-            $query->andWhere([CmsContentElement::tableName().'.active' => 'Y']);
-        }
+        //if (\Yii::$app->seo->activeContentElem) {
+            //$query->andWhere([CmsContentElement::tableName().'.active' => 'Y']);
+        //}
 
         if (\Yii::$app->seo->contentIds) {
             $query->andWhere(['content_id' => \Yii::$app->seo->contentIds]);
