@@ -568,7 +568,10 @@ HTML;
 
         $application->view->on(View::EVENT_BEGIN_PAGE, function ($e) {
             if ($this->title_append) {
-                \Yii::$app->view->title = \Yii::$app->view->title.$this->title_append;
+                if (!BackendComponent::getCurrent()) {
+                    \Yii::$app->view->title = \Yii::$app->view->title.$this->title_append;
+                }
+
             }
         });
 
