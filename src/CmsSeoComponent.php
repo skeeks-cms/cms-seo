@@ -461,6 +461,19 @@ HTML;
                     'isOpen' => false,
                 ],
                 'fields'         => [
+
+                    [
+                        'class' => HtmlBlock::class,
+                     'content' => <<<HTML
+<div class="col" style="margin-top: 20px;">
+<div class="alert alert-default">
+    <p>Для того чтобы результаты выдачи отображаемые в поисковой системе google выглядели лучше и больше привлекали потенциального клиента, можно включить эту микроразметку.</p>
+    <p><a href="https://skeeks.com/mikrorazmetka-saleevent-505" target="_blank">Подробнее</a></p>
+</div>
+</div>
+HTML
+                    ],
+
                     'is_sale_event' => [
                         'class'     => BoolField::class,
                         'allowNull' => false,
