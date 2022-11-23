@@ -15,6 +15,10 @@ use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
 use skeeks\cms\seo\assets\CmsSeoAsset;
 use skeeks\cms\seo\vendor\CanUrl;
+use skeeks\yii2\form\elements\HtmlColBegin;
+use skeeks\yii2\form\elements\HtmlColEnd;
+use skeeks\yii2\form\elements\HtmlRowBegin;
+use skeeks\yii2\form\elements\HtmlRowEnd;
 use skeeks\yii2\form\fields\BoolField;
 use skeeks\yii2\form\fields\FieldSet;
 use skeeks\yii2\form\fields\HtmlBlock;
@@ -30,6 +34,7 @@ use yii\base\WidgetEvent;
 use yii\grid\GridView;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\web\Application;
 use yii\web\Controller;
@@ -106,6 +111,27 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var bool Делать картинки webp при ресайзе?
      */
     public $is_webp = 0;
+
+    /**
+     * @var int Выводить микроразметку событий?
+     */
+    public $is_sale_event = 1;
+
+    public $sale_event_1_name = "";
+    public $sale_event_1_description = "";
+    public $sale_event_1_streetAddress = "";
+    public $sale_event_1_addressLocality = "";
+
+    public $sale_event_2_name = "";
+    public $sale_event_2_description = "";
+    public $sale_event_2_streetAddress = "";
+    public $sale_event_2_addressLocality = "";
+
+    public $sale_event_3_name = "";
+    public $sale_event_3_description = "";
+    public $sale_event_3_streetAddress = "";
+    public $sale_event_3_addressLocality = "";
+
 
     /**
      * @var int
@@ -229,7 +255,23 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             ['sitemap_min_date', 'integer'],
             ['title_append', 'string'],
             ['is_webp', 'integer'],
+            ['is_sale_event', 'integer'],
             ['is_mobile_webp', 'integer'],
+
+            ['sale_event_1_name', 'string'],
+            ['sale_event_1_description', 'string'],
+            ['sale_event_1_streetAddress', 'string'],
+            ['sale_event_1_addressLocality', 'string'],
+
+            ['sale_event_2_name', 'string'],
+            ['sale_event_2_description', 'string'],
+            ['sale_event_2_streetAddress', 'string'],
+            ['sale_event_2_addressLocality', 'string'],
+
+            ['sale_event_3_name', 'string'],
+            ['sale_event_3_description', 'string'],
+            ['sale_event_3_streetAddress', 'string'],
+            ['sale_event_3_addressLocality', 'string'],
         ]);
     }
 
@@ -250,6 +292,25 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Минимальная дата обновления ссылки'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'Types of tree'),
             'is_webp'                 => \Yii::t('skeeks/seo', 'Использовать .webp сжатие картинок?'),
+
+            'is_sale_event'                 => \Yii::t('skeeks/seo', 'Включить микроразметку событий?'),
+
+            'sale_event_1_name'                 => \Yii::t('skeeks/seo', 'Название'),
+            'sale_event_1_description'                 => \Yii::t('skeeks/seo', 'Описание'),
+            'sale_event_1_streetAddress'                 => \Yii::t('skeeks/seo', 'Адрес'),
+            'sale_event_1_addressLocality'                 => \Yii::t('skeeks/seo', 'Город'),
+
+
+            'sale_event_2_name'                 => \Yii::t('skeeks/seo', 'Название'),
+            'sale_event_2_description'                 => \Yii::t('skeeks/seo', 'Описание'),
+            'sale_event_2_streetAddress'                 => \Yii::t('skeeks/seo', 'Адрес'),
+            'sale_event_2_addressLocality'                 => \Yii::t('skeeks/seo', 'Город'),
+
+            'sale_event_3_name'                 => \Yii::t('skeeks/seo', 'Название'),
+            'sale_event_3_description'                 => \Yii::t('skeeks/seo', 'Описание'),
+            'sale_event_3_streetAddress'                 => \Yii::t('skeeks/seo', 'Адрес'),
+            'sale_event_3_addressLocality'                 => \Yii::t('skeeks/seo', 'Город'),
+
             'is_mobile_webp'          => \Yii::t('skeeks/seo', 'Использовать .webp сжатие картинок в мобильном телефоне?'),
         ]);
     }
@@ -267,10 +328,26 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'robotsContent'           => \Yii::t('skeeks/seo', 'Содержимое файла robots.txt'),
             'contentIds'              => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
             'treeTypeIds'             => \Yii::t('skeeks/seo', 'If nothing is selected, then all'),
-            'is_webp'                 => \Yii::t('skeeks/seo',
-                'Опция для компьютеров. Внимание в старых safari не работает! Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
+            'is_webp'                 => \Yii::t('skeeks/seo', 'Опция для компьютеров. Внимание в старых safari не работает! Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
             'is_mobile_webp'          => \Yii::t('skeeks/seo', 'Опция работает в мобильном телефоне. Если выбрана эта опция, то все изображения на сайте будут преобразовываться и ужиматься в .webp формат'),
             'sitemap_min_date'        => \Yii::t('skeeks/seo', 'Если будет задан этот параметр, то ни в одной ссылке не будет указано даты обновления меньше этой. Используется для переиндексации всех страниц.'),
+
+            'is_sale_event'        => \Yii::t('skeeks/seo', 'Если включена микроразметка событий, то в результатах выдачи google появится дополнительный блок'),
+
+            'sale_event_1_name'        => \Yii::t('skeeks/seo', 'Пример: 🌿 Качественные материалы'),
+            'sale_event_1_description'        => \Yii::t('skeeks/seo', 'Пример: Качественные материалы'),
+            'sale_event_1_streetAddress'        => \Yii::t('skeeks/seo', 'Возьмется из настроек сайта если не будет задан'),
+            'sale_event_1_addressLocality'        => \Yii::t('skeeks/seo', 'Возьмется из настроек сайта если не будет задан'),
+
+            'sale_event_2_name'        => \Yii::t('skeeks/seo', 'Пример: ❤ Большой выбор'),
+            'sale_event_2_description'        => \Yii::t('skeeks/seo', 'Пример: Большой выбор'),
+            'sale_event_2_streetAddress'        => \Yii::t('skeeks/seo', 'Возьмется из настроек сайта если не будет задан'),
+            'sale_event_2_addressLocality'        => \Yii::t('skeeks/seo', 'Возьмется из настроек сайта если не будет задан'),
+
+            'sale_event_3_name'        => \Yii::t('skeeks/seo', 'Пример: 🔔 Скидка на первый заказ'),
+            'sale_event_3_description'        => \Yii::t('skeeks/seo', 'Пример: Скидка на первый заказ'),
+            'sale_event_3_streetAddress'        => \Yii::t('skeeks/seo', 'Возьмется из настроек сайта если не будет задан'),
+            'sale_event_3_addressLocality'        => \Yii::t('skeeks/seo', 'Возьмется из настроек сайта если не будет задан'),
 
         ]);
     }
@@ -376,6 +453,101 @@ HTML;
                     ],
                 ],
             ],
+
+            'saleEvent' => [
+                'class'          => FieldSet::class,
+                'name'           => \Yii::t('skeeks/seo', 'Микроразметка SaleEvent'),
+                'elementOptions' => [
+                    'isOpen' => false,
+                ],
+                'fields'         => [
+                    'is_sale_event' => [
+                        'class'     => BoolField::class,
+                        'allowNull' => false,
+                    ],
+
+
+                    [
+                        'class' => HtmlBlock::class,
+                     'content' => <<<HTML
+<div class="col" style="margin-top: 20px;">
+<h3>Событие 1</h3>
+</div>
+HTML
+                    ],
+
+
+
+                    ['class' => HtmlRowBegin::class, 'noGutters' => true],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_1_name' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_1_description' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_1_streetAddress' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_1_addressLocality' => [],
+                        ['class' => HtmlColEnd::class],
+                    ['class' => HtmlRowEnd::class],
+
+                    [
+                        'class' => HtmlBlock::class,
+                     'content' => <<<HTML
+<div class="col" style="margin-top: 20px;">
+<h3>Событие 2</h3>
+</div>
+HTML
+                    ],
+
+
+
+                    ['class' => HtmlRowBegin::class, 'noGutters' => true],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_2_name' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_2_description' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_2_streetAddress' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_2_addressLocality' => [],
+                        ['class' => HtmlColEnd::class],
+                    ['class' => HtmlRowEnd::class],
+
+
+                    [
+                        'class' => HtmlBlock::class,
+                     'content' => <<<HTML
+<div class="col" style="margin-top: 20px;">
+<h3>Событие 3</h3>
+</div>
+HTML
+                    ],
+
+
+
+                    ['class' => HtmlRowBegin::class, 'noGutters' => true],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_3_name' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_3_description' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_3_streetAddress' => [],
+                        ['class' => HtmlColEnd::class],
+                        ['class' => HtmlColBegin::class],
+                            'sale_event_3_addressLocality' => [],
+                        ['class' => HtmlColEnd::class],
+                    ['class' => HtmlRowEnd::class],
+                ],
+            ],
+
             'keywords' => [
                 'class'          => FieldSet::class,
                 'name'           => \Yii::t('skeeks/seo', 'Keywords'),
@@ -554,6 +726,122 @@ HTML;
                     \Yii::$app->response->getHeaders()->setDefault('X-Skeeks-Seo-Not-Found', "isRedirectNotFoundHttpException=true");
                     \Yii::$app->end();
                     return;
+                }
+            }
+            
+            if ($this->is_sale_event && ($this->sale_event_1_name || $this->sale_event_2_name || $this->sale_event_3_name)) {
+                if (in_array(\Yii::$app->controller->action->uniqueId, ["cms/tree/view", "cms/content-element/view", "cms/saved-filter/view"])) {
+                    $date1 = date("Y-m-01", strtotime("+1 month"));
+                    $date2 = date("Y-m-t", strtotime("+1 month"));
+                    
+                    $startDate = \Yii::$app->formatter->asDatetime(strtotime($date1), "php:c");
+                    $endDate = \Yii::$app->formatter->asDatetime(strtotime($date2), "php:c");
+                    
+                    $projectName = \Yii::$app->skeeks->site->name;
+                    $address = \Yii::$app->skeeks->site->cmsSiteAddress;
+                    $addressString = "";
+                    if ($address) {
+                        $addressString = $address->value;
+                    }
+                    
+                    $saleEvents = "";
+                    if ($this->sale_event_1_name) {
+                        $eventData = [
+                            '@context' => 'https://schema.org',
+                            '@type' => 'SaleEvent',
+                            'name' => $this->sale_event_1_name,
+                            'description' => $this->sale_event_1_description ? $this->sale_event_1_description : $this->sale_event_1_name,
+                            'startDate' => $startDate,
+                            'endDate' => $endDate,
+                            'location' => [
+                                '@context' => "https://schema.org",
+                                '@type' => "Place",
+                                'name' => $projectName,
+                                'address' => [
+                                    "@type" => "PostalAddress",
+                                    "streetAddress" => $this->sale_event_1_streetAddress ? $this->sale_event_1_streetAddress : $addressString,
+                                ],
+                            ],
+                        ];
+                        
+                        if ($this->sale_event_1_addressLocality) {
+                            $eventData["location"]["address"]["addressLocality"] = $this->sale_event_1_addressLocality;
+                        }
+                        
+                        $eventDataString = Json::encode($eventData);
+                        
+                        $saleEvents .= <<<HTML
+<script type="application/ld+json">
+{$eventDataString}
+</script>
+HTML;
+                    }
+                    
+                    if ($this->sale_event_2_name) {
+                        $eventData = [
+                            '@context' => 'https://schema.org',
+                            '@type' => 'SaleEvent',
+                            'name' => $this->sale_event_2_name,
+                            'description' => $this->sale_event_2_description ? $this->sale_event_2_description : $this->sale_event_2_name,
+                            'startDate' => $startDate,
+                            'endDate' => $endDate,
+                            'location' => [
+                                '@context' => "https://schema.org",
+                                '@type' => "Place",
+                                'name' => $projectName,
+                                'address' => [
+                                    "@type" => "PostalAddress",
+                                    "streetAddress" => $this->sale_event_2_streetAddress ? $this->sale_event_2_streetAddress : $addressString,
+                                ],
+                            ],
+                        ];
+                        
+                        if ($this->sale_event_2_addressLocality) {
+                            $eventData["location"]["address"]["addressLocality"] = $this->sale_event_2_addressLocality;
+                        }
+                        
+                        $eventDataString = Json::encode($eventData);
+                        
+                        $saleEvents .= <<<HTML
+<script type="application/ld+json">
+{$eventDataString}
+</script>
+HTML;
+                    }
+                    
+                    if ($this->sale_event_3_name) {
+                        $eventData = [
+                            '@context' => 'https://schema.org',
+                            '@type' => 'SaleEvent',
+                            'name' => $this->sale_event_3_name,
+                            'description' => $this->sale_event_3_description ? $this->sale_event_3_description : $this->sale_event_3_name,
+                            'startDate' => $startDate,
+                            'endDate' => $endDate,
+                            'location' => [
+                                '@context' => "https://schema.org",
+                                '@type' => "Place",
+                                'name' => $projectName,
+                                'address' => [
+                                    "@type" => "PostalAddress",
+                                    "streetAddress" => $this->sale_event_3_streetAddress ? $this->sale_event_3_streetAddress : $addressString,
+                                ],
+                            ],
+                        ];
+                        
+                        if ($this->sale_event_3_addressLocality) {
+                            $eventData["location"]["address"]["addressLocality"] = $this->sale_event_3_addressLocality;
+                        }
+                        
+                        $eventDataString = Json::encode($eventData);
+                        
+                        $saleEvents .= <<<HTML
+<script type="application/ld+json">
+{$eventDataString}
+</script>
+HTML;
+                    }
+                    
+                        \Yii::$app->seo->countersContent = \Yii::$app->seo->countersContent . $saleEvents;
                 }
             }
         });
