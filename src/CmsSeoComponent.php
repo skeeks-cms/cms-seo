@@ -223,7 +223,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     /**
      * @var bool
      */
-    public $isRedirectNotFoundHttpException = true;
+    public $isRedirectNotFoundHttpException = false;
 
 
     /**
