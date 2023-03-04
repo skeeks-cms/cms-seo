@@ -69,6 +69,9 @@ class CanUrl extends Component implements BootstrapInterface
     public $is_track_pjax = false;
     public $is_track_flash = false;
     public $is_soret_query_params = false;
+    
+    public $is_redirrect = true;
+    
     protected $_scheme;
     protected $_user = '';
     protected $_pass = '';
@@ -189,6 +192,10 @@ class CanUrl extends Component implements BootstrapInterface
     public function if_need_then_send_redirect($is_final, $current_url = null)
     {
 
+        if ($this->is_redirrect !== true) {
+            return false;
+        }
+        
         if (!$this->is_tracked()) {
             return false;
         }
