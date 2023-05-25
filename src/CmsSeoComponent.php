@@ -854,7 +854,7 @@ HTML;
 HTML;
                     }
                     
-                        \Yii::$app->seo->countersContent = \Yii::$app->seo->countersContent . $saleEvents;
+                    \Yii::$app->seo->countersContent = \Yii::$app->seo->countersContent . $saleEvents;
                 }
             }
         });
@@ -885,7 +885,7 @@ HTML;
             }
 
             if (BackendComponent::getCurrent()
-                //&& BackendComponent::getCurrent()->id == 'backendAdmin'
+                && !in_array(BackendComponent::getCurrent()->id, ['upaBackend'])
             ) {
                 return false;
             }
