@@ -97,7 +97,7 @@ class UrlHelper {
              * http_build_query - использует PHP_QUERY_RFC1738 - по умолчанию
              * Она кодируется тем же способом, что и post данные WWW-формы, то есть как в типе носителя application/x-www-form-urlencoded. Это отличается от RFC1738-кодирования (см. rawurlencode()) тем, что, по историческим соображениям, пробелы кодируются как плюсы (+).Эта функция удобна при кодировании строки для использования в части запроса URL для передачи переменных на следующую страницу:
              */
-            return http_build_query($data, null, $glue, PHP_QUERY_RFC1738);
+            return http_build_query($data, '', $glue, PHP_QUERY_RFC1738);
         }
     }
 
