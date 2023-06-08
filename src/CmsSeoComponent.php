@@ -915,7 +915,7 @@ HTML;
 
 
             if ($replaces) {
-                $response->data = strtr($response->data, $replaces);
+                $response->data = strtr((string) $response->data, $replaces);
             }
 
         });
