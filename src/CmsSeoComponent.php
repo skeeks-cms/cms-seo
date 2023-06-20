@@ -897,7 +897,7 @@ HTML;
             $replaces = [];
 
             if ($this->header_content) {
-                $replaces["</head>"] = "\n\r".$this->header_content."\n\r</head>";
+                $replaces["</head>"] = "".trim(((string) $this->header_content))."</head>";
             }
 
 
