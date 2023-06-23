@@ -123,7 +123,7 @@ class CanUrl extends Component implements BootstrapInterface
         $view = $event->sender;
         if (!\Yii::$app->request->isPjax && !\Yii::$app->request->isAjax) {
             if (!isset($view->linkTags['canonical'])) {
-                $view->linkTags['canonical'] = '<link rel="canonical" href="'.$canurl.'"/>';
+                $view->linkTags['canonical'] = '<link rel="canonical" href="'.$canurl.'">';
             }
             
         }
