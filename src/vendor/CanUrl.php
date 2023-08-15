@@ -69,9 +69,9 @@ class CanUrl extends Component implements BootstrapInterface
     public $is_track_pjax = false;
     public $is_track_flash = false;
     public $is_soret_query_params = false;
-    
+
     public $is_redirrect = true;
-    
+
     protected $_scheme;
     protected $_user = '';
     protected $_pass = '';
@@ -102,6 +102,16 @@ class CanUrl extends Component implements BootstrapInterface
         'ymclid'     => null,
         'frommarket' => null,
         'text'       => null,
+
+        'roistat'          => null,
+        'roistat_referrer' => null,
+        'roistat_pos'      => null,
+
+        'rs'          => null,
+        'rs_referrer' => null,
+        'rs_pos'      => null,
+
+        'cm_id' => null
     ];
     public function bootstrap($application)
     {
@@ -125,7 +135,7 @@ class CanUrl extends Component implements BootstrapInterface
             if (!isset($view->linkTags['canonical'])) {
                 $view->linkTags['canonical'] = '<link rel="canonical" href="'.$canurl.'">';
             }
-            
+
         }
 
 
@@ -195,7 +205,7 @@ class CanUrl extends Component implements BootstrapInterface
         if ($this->is_redirrect !== true) {
             return false;
         }
-        
+
         if (!$this->is_tracked()) {
             return false;
         }
@@ -218,17 +228,17 @@ class CanUrl extends Component implements BootstrapInterface
         $request = \Yii::$app->getRequest();
 
         $request_method = $request->getMethod();
-        if (!in_array($request_method, ['GET', 'HEAD']) AND !in_array($request_method, $this->extra_tracked_methods)) {
+        if (!in_array($request_method, ['GET', 'HEAD']) and !in_array($request_method, $this->extra_tracked_methods)) {
             return false;
         }
 
-        if (!$this->is_track_ajax AND $request->getIsAjax()) {
+        if (!$this->is_track_ajax and $request->getIsAjax()) {
             return false;
         }
-        if (!$this->is_track_pjax AND $request->getIsPjax()) {
+        if (!$this->is_track_pjax and $request->getIsPjax()) {
             return false;
         }
-        if (!$this->is_track_flash AND $request->getIsFlash()) {
+        if (!$this->is_track_flash and $request->getIsFlash()) {
             return false;
         }
 
@@ -259,7 +269,7 @@ class CanUrl extends Component implements BootstrapInterface
 
         //\Yii::info("parsed_current_url = " . print_r($parsed_current_url, true), self::class);
         $redirurl = $this->GETredirurl($parsed_current_url, $is_final);
-        
+
         //print_r($redirurl);die;
 
         //\Yii::info("redirurl = {$redirurl}", self::class);
@@ -289,7 +299,7 @@ class CanUrl extends Component implements BootstrapInterface
         if (!isset($current_url)) {
             $current_url = \Yii::$app->getRequest()->getAbsoluteUrl();
         }
-        if (!is_string($current_url) AND !is_array($current_url)) {
+        if (!is_string($current_url) and !is_array($current_url)) {
             throw new InvalidParamException('(!is_string($current_url) AND !is_array($current_url))');
         } elseif (is_string($current_url)) {
             $parsed_current_url = parse_url($current_url);
@@ -353,7 +363,7 @@ class CanUrl extends Component implements BootstrapInterface
         if (!isset($current_url)) {
             $current_url = \Yii::$app->getRequest()->getAbsoluteUrl();
         }
-        if (!is_string($current_url) AND !is_array($current_url)) {
+        if (!is_string($current_url) and !is_array($current_url)) {
             throw new InvalidParamException('(!is_string($current_url) AND !is_array($current_url))');
         } elseif (is_string($current_url)) {
             $parsed_current_url = parse_url($current_url);
@@ -377,10 +387,10 @@ class CanUrl extends Component implements BootstrapInterface
         if (!isset($this->_query_params)) {
             return null;
         }
-        if (!isset($this->_important_params) AND !$is_final) {
+        if (!isset($this->_important_params) and !$is_final) {
             return null;
         }
-        if (!isset($this->_minor_params) AND !$is_final) {
+        if (!isset($this->_minor_params) and !$is_final) {
             return null;
         }
 
@@ -388,7 +398,7 @@ class CanUrl extends Component implements BootstrapInterface
         ksort($this_query_params);
         $rett_params = $this_query_params;
 
-         $this_important_params = (isset($this->_important_params) ? $this->_important_params : []);
+        $this_important_params = (isset($this->_important_params) ? $this->_important_params : []);
         $this_minor_params = (isset($this->_minor_params) ? $this->_minor_params : []);
 
         if ($this->is_soret_query_params === false) {
@@ -396,8 +406,7 @@ class CanUrl extends Component implements BootstrapInterface
             if ($current_params) {
                 $this_all_base_prams = ArrayHelper::merge($this_important_params, $this_minor_params);
 
-                foreach ($current_params as $key => $val)
-                {
+                foreach ($current_params as $key => $val) {
                     if (array_key_exists($key, $this_all_base_prams)) {
                         $rett_params[$key] = $val;
                     }
@@ -406,15 +415,15 @@ class CanUrl extends Component implements BootstrapInterface
         } else {
             ksort($this_important_params);
             foreach ($this_important_params as $kkk => $vvv) {
-                if (!isset($vvv) AND array_key_exists($kkk, $current_params)) {
+                if (!isset($vvv) and array_key_exists($kkk, $current_params)) {
                     $vvv = $current_params[$kkk];
                 }
                 $rett_params[$kkk] = $vvv;
             }
-    
+
             ksort($this_minor_params);
             foreach ($this_minor_params as $kkk => $vvv) {
-                if (!isset($vvv) AND array_key_exists($kkk, $current_params)) {
+                if (!isset($vvv) and array_key_exists($kkk, $current_params)) {
                     $vvv = $current_params[$kkk];
                 }
                 $rett_params[$kkk] = $vvv;
@@ -422,7 +431,7 @@ class CanUrl extends Component implements BootstrapInterface
         }
 
         $res = UrlHelper::build_query($rett_params);
-        
+
         return $res;
     }
     public function event_after_request(Event $event)
@@ -499,17 +508,17 @@ class CanUrl extends Component implements BootstrapInterface
     public function GETcore_params() { return $this->GETquery_params(); }
     public function GETquery_params()
     {
-        if (isset($this->_query_params) AND !is_array($this->_query_params)) {
+        if (isset($this->_query_params) and !is_array($this->_query_params)) {
             throw new Exception('(isset($this->_query_params) AND !is_array($this->_query_params))');
         }
         return $this->_query_params;
     }
     public function SETquery_params($query_params)
     {
-        if (isset($query_params) AND empty($query_params)) {
+        if (isset($query_params) and empty($query_params)) {
             $query_params = [];
         }
-        if (isset($query_params) AND !is_array($query_params)) {
+        if (isset($query_params) and !is_array($query_params)) {
             throw new InvalidParamException('(isset($query_params) AND !is_array($query_params))');
         }
         $this->_query_params = $query_params;
@@ -583,17 +592,17 @@ class CanUrl extends Component implements BootstrapInterface
     }
     public function GETimportant_params()
     {
-        if (isset($this->_important_params) AND !is_array($this->_important_params)) {
+        if (isset($this->_important_params) and !is_array($this->_important_params)) {
             throw new Exception('(isset($this->_important_params) AND !is_array($this->_important_params))');
         }
         return $this->_important_params;
     }
     public function SETimportant_params($important_params)
     {
-        if (isset($important_params) AND empty($important_params)) {
+        if (isset($important_params) and empty($important_params)) {
             $important_params = [];
         }
-        if (isset($important_params) AND !is_array($important_params)) {
+        if (isset($important_params) and !is_array($important_params)) {
             throw new InvalidParamException('(isset($important_params) AND !is_array($important_params))');
         }
         $this->_important_params = $important_params;
@@ -650,17 +659,17 @@ class CanUrl extends Component implements BootstrapInterface
     }
     public function GETminor_params()
     {
-        if (isset($this->_minor_params) AND !is_array($this->_minor_params)) {
+        if (isset($this->_minor_params) and !is_array($this->_minor_params)) {
             throw new Exception('(isset($this->_minor_params) AND !is_array($this->_minor_params))');
         }
         return $this->_minor_params;
     }
     public function SETminor_params($minor_params)
     {
-        if (isset($minor_params) AND empty($minor_params)) {
+        if (isset($minor_params) and empty($minor_params)) {
             $minor_params = [];
         }
-        if (isset($minor_params) AND !is_array($minor_params)) {
+        if (isset($minor_params) and !is_array($minor_params)) {
             throw new InvalidParamException('(isset($minor_params) AND !is_array($minor_params))');
         }
         $this->_minor_params = $minor_params;

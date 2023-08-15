@@ -707,7 +707,6 @@ HTML
                 'forcePageParam' => $this->forcePageParam,
             ]);
 
-
             if (\Yii::$app->request->queryParams) {
                 $utms = [];
                 foreach (\Yii::$app->request->queryParams as $paramName => $paramValue) {
@@ -726,14 +725,29 @@ HTML
                         'pm_block',
                         'pm_position',
 
+                        'cm_id',
+
                         'clid',
                         'yclid',
                         'ymclid',
                         'frommarket',
                         'text',
+
+                        'roistat',
+                        'roistat_referrer',
+                        'roistat_pos',
+
+                        'rs',
+                        'rs_referrer',
+                        'rs_pos',
                     ])) {
                         $utms[$paramName] = $paramValue;
                     }
+                }
+
+                //Если есть хоть одна utm метка, нужно обновить и первый реферрер (страница с которой человек первый раз попал на сайт)
+                if ($utms && \Yii::$app->request->referrer) {
+                    $utms["sx_first_referrer"] = \Yii::$app->request->referrer;
                 }
 
                 if ($utms) {
