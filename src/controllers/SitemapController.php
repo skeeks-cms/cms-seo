@@ -12,6 +12,8 @@ use skeeks\cms\models\CmsContentElement;
 use skeeks\cms\models\CmsSavedFilter;
 use skeeks\cms\models\CmsTree;
 use skeeks\cms\models\Tree;
+use skeeks\cms\shop\models\ShopBrand;
+use skeeks\cms\shop\models\ShopCollection;
 use yii\helpers\Url;
 use yii\web\Controller;
 
@@ -34,6 +36,8 @@ class SitemapController extends Controller
         $this->_addSavedFilters($result);
         $this->_addElements($result);
         $this->_addAdditional($result);
+        $this->_addBrands($result);
+        $this->_addCollections($result);
 
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
@@ -142,6 +146,66 @@ class SitemapController extends Controller
                 if (\Yii::$app->seo->is_sitemap_priority) {
                     $tmp['priority'] = '0.8';
                 }
+
+                $data[] = $tmp;
+            }
+        }
+
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addBrands(&$data = [])
+    {
+        $q = ShopBrand::find();
+
+        if ($q->count()) {
+            /**
+             * @var ShopBrand $shopBrand
+             */
+            foreach ($q->each(10) as $shopBrand) {
+                $tmp = [
+                    "loc"     => $shopBrand->absoluteUrl,
+                    "lastmod" => $this->_lastMod($shopBrand),
+                ];
+
+                /*if (\Yii::$app->seo->is_sitemap_priority) {
+                    $tmp['priority'] = '0.8';
+                }*/
+
+                $data[] = $tmp;
+            }
+        }
+
+
+        return $this;
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    protected function _addCollections(&$data = [])
+    {
+        $q = ShopCollection::find();
+
+        if ($q->count()) {
+            /**
+             * @var ShopCollection $shopCollection
+             */
+            foreach ($q->each(10) as $shopCollection) {
+                $tmp = [
+                    "loc"     => $shopCollection->absoluteUrl,
+                    "lastmod" => $this->_lastMod($shopCollection),
+                ];
+
+                /*if (\Yii::$app->seo->is_sitemap_priority) {
+                    $tmp['priority'] = '0.8';
+                }*/
 
                 $data[] = $tmp;
             }
