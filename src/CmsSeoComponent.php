@@ -108,6 +108,11 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public $is_sitemap_priority = false;
 
     /**
+     * @var bool Разрешить индексацию контента для взрослых? По умолчанию не индексируется.
+     */
+    public $is_allow_index_adult_content = false;
+
+    /**
      * @var bool Делать картинки webp при ресайзе?
      */
     public $is_webp = 0;
@@ -254,6 +259,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
                 [
                     'enableKeywordsGenerator',
                     'is_sitemap_priority',
+                    'is_allow_index_adult_content',
                     'minKeywordLenth',
                     'maxKeywordsLength',
                     //'activeContentElem', 'activeTree'
@@ -292,6 +298,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     {
         return ArrayHelper::merge(parent::attributeLabels(), [
             'is_sitemap_priority'     => \Yii::t('skeeks/seo', 'Добавлять priority в sitemap?'),
+            'is_allow_index_adult_content'     => \Yii::t('skeeks/seo', 'Разрешить индексацию контента для взрослых?'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'Automatic generation of keywords'),
             'minKeywordLenth'         => \Yii::t('skeeks/seo', 'The minimum length of the keyword'),
             'maxKeywordsLength'       => \Yii::t('skeeks/seo', 'Length keywords'),
@@ -332,6 +339,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeHints()
     {
         return ArrayHelper::merge(parent::attributeHints(), [
+            'is_allow_index_adult_content'          => "Если эта опция не выбрана то контента отмеченный как для взрослых, не попадет в карту сайта и будет запрещен к индексации!",
             'header_content'          => "Вставьте подвреждающие коды yandex webmaster и подобных систем. Этот код попадет между тегов head на странице.",
             'countersContent'         => \Yii::t('skeeks/seo',
                 'В это поле вы можете поставить любые коды счетчиков и сторонних систем (yandex.metrics jivosite google.metrics и прочие). Они будут выведены внизу страницы, перед закрывающим тегом body'),
@@ -394,9 +402,16 @@ class CmsSeoComponent extends Component implements BootstrapInterface
 HTML
                     ,
                 ],
+
+                'is_allow_index_adult_content' => [
+                    'class' => BoolField::class,
+                    'allowNull' => false
+                ],
+
             ];
         } else {
             $indexing = [
+
                 'robotsContent' => [
                     'class'          => TextareaField::class,
                     /*'on afterRender'          => function(ViewRenderEvent $e) {
@@ -411,6 +426,12 @@ HTML;
                         'rows' => 15,
                     ],
                 ],
+
+                'is_allow_index_adult_content' => [
+                    'class' => BoolField::class,
+                    'allowNull' => false
+                ],
+
             ];
         }
 

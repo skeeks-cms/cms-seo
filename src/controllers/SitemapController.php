@@ -94,6 +94,13 @@ class SitemapController extends Controller
                 'is_index' => 1,
         ]);
 
+        //Разделы 18 + не добавлять!
+        if (!\Yii::$app->seo->is_allow_index_adult_content) {
+            $query->andWhere([
+                'is_adult' => 0,
+            ]);
+        }
+
         if (\Yii::$app->seo->treeTypeIds) {
             $query->andWhere(['tree_type_id' => \Yii::$app->seo->treeTypeIds]);
         }
@@ -131,6 +138,14 @@ class SitemapController extends Controller
     protected function _addSavedFilters(&$data = [])
     {
         $query = CmsSavedFilter::find()->cmsSite();
+
+        //Разделы 18 + не добавлять!
+        if (!\Yii::$app->seo->is_allow_index_adult_content) {
+            $query->joinWith("cmsTree as cmsTree")->andWhere([
+                'cmsTree.is_adult' => 0,
+            ]);
+        }
+
         $savedFilters = $query->all();
 
         if ($savedFilters) {
@@ -251,6 +266,13 @@ class SitemapController extends Controller
 
         if (\Yii::$app->seo->contentIds) {
             $query->andWhere(['content_id' => \Yii::$app->seo->contentIds]);
+        }
+
+        //Разделы 18 + не добавлять!
+        if (!\Yii::$app->seo->is_allow_index_adult_content) {
+            $query->andWhere([
+                'is_adult' => 0,
+            ]);
         }
 
         $elements = $query->orderBy(['updated_at' => SORT_DESC, 'priority' => SORT_ASC])->all();
