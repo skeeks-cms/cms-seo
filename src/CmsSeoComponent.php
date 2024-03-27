@@ -972,7 +972,9 @@ HTML;
 
 
             if ($replaces) {
-                $response->data = strtr((string)$response->data, $replaces);
+                if (is_string($response->data)) {
+                    $response->data = strtr((string)$response->data, $replaces);
+                }
             }
 
         });
