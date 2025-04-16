@@ -823,6 +823,12 @@ HTML
                             'description' => $this->sale_event_1_description ? $this->sale_event_1_description : $this->sale_event_1_name,
                             'startDate'   => $startDate,
                             'endDate'     => $endDate,
+                            'eventAttendanceMode'   => "https://schema.org/MixedEventAttendanceMode",
+                            "eventStatus" => "https://schema.org/EventScheduled",
+                            'organizer'   => [
+                                'name' => \Yii::$app->skeeks->site->name,
+                                'url' => Url::home(true)
+                            ],
                             'location'    => [
                                 '@context' => "https://schema.org",
                                 '@type'    => "Place",
@@ -833,6 +839,10 @@ HTML
                                 ],
                             ],
                         ];
+                        
+                        if (\Yii::$app->skeeks->site->image) {
+                            $eventData["image"] = \Yii::$app->skeeks->site->image->absoluteSrc;
+                        }
 
                         if ($this->sale_event_1_addressLocality) {
                             $eventData["location"]["address"]["addressLocality"] = $this->sale_event_1_addressLocality;
@@ -855,6 +865,12 @@ HTML;
                             'description' => $this->sale_event_2_description ? $this->sale_event_2_description : $this->sale_event_2_name,
                             'startDate'   => $startDate,
                             'endDate'     => $endDate,
+                            'eventAttendanceMode'   => "https://schema.org/MixedEventAttendanceMode",
+                            "eventStatus" => "https://schema.org/EventScheduled",
+                            'organizer'   => [
+                                'name' => \Yii::$app->skeeks->site->name,
+                                'url' => Url::home(true)
+                            ],
                             'location'    => [
                                 '@context' => "https://schema.org",
                                 '@type'    => "Place",
@@ -865,6 +881,9 @@ HTML;
                                 ],
                             ],
                         ];
+                        if (\Yii::$app->skeeks->site->image) {
+                            $eventData["image"] = \Yii::$app->skeeks->site->image->absoluteSrc;
+                        }
 
                         if ($this->sale_event_2_addressLocality) {
                             $eventData["location"]["address"]["addressLocality"] = $this->sale_event_2_addressLocality;
@@ -887,6 +906,12 @@ HTML;
                             'description' => $this->sale_event_3_description ? $this->sale_event_3_description : $this->sale_event_3_name,
                             'startDate'   => $startDate,
                             'endDate'     => $endDate,
+                            'eventAttendanceMode'   => "https://schema.org/MixedEventAttendanceMode",
+                            "eventStatus" => "https://schema.org/EventScheduled",
+                            'organizer'   => [
+                                'name' => \Yii::$app->skeeks->site->name,
+                                'url' => Url::home(true)
+                            ],
                             'location'    => [
                                 '@context' => "https://schema.org",
                                 '@type'    => "Place",
@@ -897,6 +922,9 @@ HTML;
                                 ],
                             ],
                         ];
+                        if (\Yii::$app->skeeks->site->image) {
+                            $eventData["image"] = \Yii::$app->skeeks->site->image->absoluteSrc;
+                        }
 
                         if ($this->sale_event_3_addressLocality) {
                             $eventData["location"]["address"]["addressLocality"] = $this->sale_event_3_addressLocality;
