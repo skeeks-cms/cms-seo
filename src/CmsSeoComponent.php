@@ -942,6 +942,11 @@ HTML;
                     \Yii::$app->seo->countersContent = \Yii::$app->seo->countersContent.$saleEvents;
                 }
             }
+
+            //legal
+            \Yii::$app->legal->registerAssets();
+
+
         });
 
         $application->on(Application::EVENT_AFTER_REQUEST, function ($e) {
