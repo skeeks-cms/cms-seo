@@ -84,6 +84,7 @@ class CanUrl extends Component implements BootstrapInterface
     protected $_minor_params = [
         'from'         => null,
         '_openstat'    => null,
+        '_ym_debug'    => null,
         'utm_source'   => null,
         'utm_medium'   => null,
         'utm_campaign' => null,
