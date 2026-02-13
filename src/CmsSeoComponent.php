@@ -100,7 +100,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     /**
      * @var bool включить автогенерацию ключевых слов
      */
-    public $enableKeywordsGenerator = false;
+    public $enableKeywordsGenerator = 0;
 
     /**
      * @var bool добавлять приоритет в sitemap?
@@ -682,6 +682,7 @@ HTML
              */
             $view = $e->sender;
 
+            /*print_r($this->toArray());;die;*/
             if ($this->enableKeywordsGenerator && !BackendComponent::getCurrent()) {
                 if (!\Yii::$app->request->isAjax && !\Yii::$app->request->isPjax) {
                     $this->_autoGenerateKeywords($view);
