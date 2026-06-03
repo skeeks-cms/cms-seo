@@ -11,10 +11,13 @@ namespace skeeks\cms\seo;
 use kartik\datecontrol\DateControl;
 use skeeks\cms\backend\BackendComponent;
 use skeeks\cms\backend\widgets\ActiveFormBackend;
+use skeeks\cms\backend\widgets\SelectModelDialogStorageFileSrcWidget;
+use skeeks\cms\backend\widgets\SelectModelDialogStorageFileWidget;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
 use skeeks\cms\seo\assets\CmsSeoAsset;
 use skeeks\cms\seo\vendor\CanUrl;
+use skeeks\cms\widgets\AjaxFileUploadWidget;
 use skeeks\yii2\form\elements\HtmlColBegin;
 use skeeks\yii2\form\elements\HtmlColEnd;
 use skeeks\yii2\form\elements\HtmlRowBegin;
@@ -111,6 +114,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
      * @var bool Разрешить индексацию контента для взрослых? По умолчанию не индексируется.
      */
     public $is_allow_index_adult_content = false;
+
+    public $google_file_ids = [];
 
     /**
      * @var bool Делать картинки webp при ресайзе?
@@ -270,6 +275,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             ['countersContent', 'string'],
             ['header_content', 'string'],
             [['contentIds', 'treeTypeIds'], 'safe'],
+            [['google_file_ids'], 'safe'],
             ['sitemap_min_date', 'integer'],
             ['title_append', 'string'],
             ['is_webp', 'integer'],
@@ -297,6 +303,7 @@ class CmsSeoComponent extends Component implements BootstrapInterface
     public function attributeLabels()
     {
         return ArrayHelper::merge(parent::attributeLabels(), [
+            'google_file_ids'     => \Yii::t('skeeks/seo', 'Файлы от гугл, для подтверждения прав на сайт'),
             'is_sitemap_priority'     => \Yii::t('skeeks/seo', 'Добавлять priority в sitemap?'),
             'is_allow_index_adult_content'     => \Yii::t('skeeks/seo', 'Разрешить индексацию контента для взрослых?'),
             'enableKeywordsGenerator' => \Yii::t('skeeks/seo', 'Automatic generation of keywords'),
@@ -430,6 +437,20 @@ HTML;
                 'is_allow_index_adult_content' => [
                     'class' => BoolField::class,
                     'allowNull' => false
+                ],
+                'google_file_ids'        => [
+                    /*'class'       => WidgetField::class,
+                    'widgetClass' => AjaxFileUploadWidget::class,
+                    'widgetConfig' => [
+                        //'accept'   => 'image/*',
+                        'multiple' => true,
+                    ],*/
+
+                    'class'       => WidgetField::class,
+                    'widgetClass' => SelectModelDialogStorageFileWidget::class,
+                    'widgetConfig' => [
+                        'multiple' => true
+                    ],
                 ],
 
             ];
