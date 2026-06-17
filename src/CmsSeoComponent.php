@@ -13,9 +13,9 @@ use skeeks\cms\backend\BackendComponent;
 use skeeks\cms\backend\widgets\ActiveFormBackend;
 use skeeks\cms\backend\widgets\SelectModelDialogStorageFileSrcWidget;
 use skeeks\cms\backend\widgets\SelectModelDialogStorageFileWidget;
+use skeeks\cms\assets\CmsAsset;
 use skeeks\cms\base\Component;
 use skeeks\cms\helpers\StringHelper;
-use skeeks\cms\seo\assets\CmsSeoAsset;
 use skeeks\cms\seo\vendor\CanUrl;
 use skeeks\cms\widgets\AjaxFileUploadWidget;
 use skeeks\yii2\form\elements\HtmlColBegin;
@@ -251,8 +251,8 @@ class CmsSeoComponent extends Component implements BootstrapInterface
             'name'        => \Yii::t('skeeks/seo', 'Seo'),
             'description' => 'Установка счетчиков, правка robots.txt, карта сайта',
             'image'       => [
-                CmsSeoAsset::class,
-                'icons/seo-icon.png',
+                CmsAsset::class,
+                'images/icons/admin-menu/seo.svg',
             ],
         ]);
     }
