@@ -22,4 +22,11 @@ return [
             ]
         ],
     ],
+
+    'modules' => [
+        'seo' => [
+            'class'               => \skeeks\cms\seo\CmsSeoModule::class,
+            'controllerNamespace' => 'skeeks\cms\seo\console\controllers',
+        ],
+    ],
 ];
