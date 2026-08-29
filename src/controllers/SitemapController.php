@@ -14,7 +14,6 @@ use skeeks\cms\models\CmsTree;
 use skeeks\cms\models\Tree;
 use skeeks\cms\shop\models\ShopBrand;
 use skeeks\cms\shop\models\ShopCollection;
-use yii\helpers\Url;
 use yii\web\Controller;
 
 /**
@@ -35,7 +34,6 @@ class SitemapController extends Controller
         $this->_addTrees($result);
         $this->_addSavedFilters($result);
         $this->_addElements($result);
-        $this->_addAdditional($result);
         $this->_addBrands($result);
         $this->_addCollections($result);
 
@@ -295,19 +293,6 @@ class SitemapController extends Controller
                 $data[] = $tmp;
             }
         }
-
-        return $this;
-    }
-
-    /**
-     * @param array $data
-     * @return $this
-     */
-    protected function _addAdditional(&$data = [])
-    {
-        $data[] = [
-            'loc' => Url::to(['/cms/cms/index'], true),
-        ];
 
         return $this;
     }

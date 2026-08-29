@@ -15,7 +15,6 @@ use skeeks\cms\shop\models\ShopCollection;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
-use yii\helpers\Url;
 
 /**
  * Builds a static sitemap index using the settings of the SEO component.
@@ -195,8 +194,6 @@ class SitemapGenerator extends Component
             yield 'content-'.$contentId => $this->contentItems($contentId);
         }
 
-        yield 'additional' => $this->additionalItems();
-
         if (class_exists(ShopBrand::class)) {
             yield 'brands' => $this->brandItems();
         }
@@ -317,14 +314,6 @@ class SitemapGenerator extends Component
         }
 
         return $query;
-    }
-
-    /**
-     * @return \Generator
-     */
-    protected function additionalItems()
-    {
-        yield ['loc' => Url::to(['/cms/cms/index'], true)];
     }
 
     /**
