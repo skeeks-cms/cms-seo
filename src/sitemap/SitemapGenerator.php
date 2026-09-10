@@ -55,10 +55,11 @@ class SitemapGenerator extends Component
     }
 
     /**
-     * @param callable|null $progress
+     * @param callable|null $progress Human-readable part messages.
+     * @param callable|null $checkpoint Receives the processed URL count; may abort before publication.
      * @return array
      */
-    public function generate(callable $progress = null)
+    public function generate(callable $progress = null, callable $checkpoint = null)
     {
         set_time_limit(0);
 
@@ -87,8 +88,11 @@ class SitemapGenerator extends Component
                 throw new \RuntimeException("Unable to create sitemap directory: {$generationRoot}");
             }
 
-            $result = $this->writeParts($generationRoot, $generation, $progress);
+            $result = $this->writeParts($generationRoot, $generation, $progress, $checkpoint);
             $rootContent = $this->renderIndex($result['index']);
+            if ($checkpoint) {
+                $checkpoint($result['urls']);
+            }
             $this->publishRootFile($rootFile, $rootContent);
             $published = true;
 
@@ -119,7 +123,7 @@ class SitemapGenerator extends Component
      * @param callable|null $progress
      * @return array
      */
-    protected function writeParts($generationRoot, $generation, callable $progress = null)
+    protected function writeParts($generationRoot, $generation, callable $progress = null, callable $checkpoint = null)
     {
         $totalUrls = 0;
         $totalFiles = 0;
@@ -132,6 +136,9 @@ class SitemapGenerator extends Component
 
             try {
                 foreach ($items as $item) {
+                    if ($checkpoint) {
+                        $checkpoint($totalUrls);
+                    }
                     if (!$handle || $partUrls >= $this->maxUrlsPerFile) {
                         if ($handle) {
                             $this->closePart($handle);
@@ -167,6 +174,9 @@ class SitemapGenerator extends Component
                 if ($handle) {
                     $this->closePart($handle);
                     $handle = null;
+                }
+                if ($checkpoint) {
+                    $checkpoint($totalUrls);
                 }
             } finally {
                 if (is_resource($handle)) {

@@ -1,5 +1,10 @@
 <?php
 return [
+    'controllerMap' => [
+        'migrate' => [
+            'migrationPath' => ['@skeeks/cms/seo/migrations'],
+        ],
+    ],
     'components' => [
 
         'seo' => [

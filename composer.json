@@ -16,6 +16,10 @@
 			"email": "semenov@skeeks.com"
 		}
 	],
+    "require": {
+        "skeeks/cms-job": "^1.0 || dev-master",
+        "skeeks/cms-agent": "^3.2 || dev-master"
+    },
     "autoload": {
         "psr-4": {
             "skeeks\\cms\\seo\\": "src/"
