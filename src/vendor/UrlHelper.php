@@ -88,7 +88,7 @@ class UrlHelper {
              * rawurlencode - URL-кодирование в соответствии с RFC3986.
              * http_build_query - использует PHP_QUERY_RFC1738 - по умолчанию
              */
-            return http_build_query($data, null, $glue, PHP_QUERY_RFC3986);
+            return http_build_query($data, '', $glue, PHP_QUERY_RFC3986);
         }
         else {
             /**
