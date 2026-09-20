@@ -484,7 +484,10 @@ class SitemapGenerator extends Component
         // main domain, just like model absolute URLs do, with URL manager as a fallback.
         $urlManager = \Yii::$app->urlManager;
         $site = \Yii::$app->has('skeeks', true) ? \Yii::$app->skeeks->site : null;
-        $hostInfo = $site ? $site->url : $urlManager->getHostInfo();
+        $hostInfo = $site ? $site->url : '';
+        if (!parse_url((string)$hostInfo, PHP_URL_HOST)) {
+            $hostInfo = $urlManager->getHostInfo();
+        }
         $hostInfo = rtrim((string) $hostInfo, '/');
         if (!parse_url($hostInfo, PHP_URL_HOST)) {
             throw new InvalidConfigException('The console URL manager must have an absolute hostInfo.');
