@@ -11,9 +11,12 @@ use skeeks\cms\models\CmsContentElement;
 use skeeks\cms\models\CmsSavedFilter;
 use skeeks\cms\models\CmsTree;
 use skeeks\cms\shop\models\ShopBrand;
+use skeeks\cms\shop\models\ShopCmsContentElement;
 use skeeks\cms\shop\models\ShopCollection;
+use skeeks\cms\shop\models\ShopProduct;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\db\Query;
 use yii\helpers\FileHelper;
 
 /**
@@ -40,6 +43,12 @@ class SitemapGenerator extends Component
      * @var string directory containing generated sitemap parts
      */
     public $partsDirectory = 'sitemaps';
+
+    /**
+     * @var array|false|null [brand_id => true] брендов с товарами, видимыми в листинге по умолчанию;
+     * false — определить не удалось (бренды не фильтруются)
+     */
+    protected $_brandIdsWithVisibleProducts = null;
 
     /**
      * @inheritdoc
@@ -263,6 +272,10 @@ class SitemapGenerator extends Component
             $savedFilterQuery->joinWith('cmsTree as cmsTree')->andWhere(['cmsTree.is_adult' => 0]);
         }
         foreach ($savedFilterQuery->each(200) as $savedFilter) {
+            //Фильтр по бренду без видимых товаров отдаёт пустой листинг — не включаем его в sitemap
+            if ($savedFilter->shop_brand_id && !$this->isBrandListed($savedFilter->shop_brand_id)) {
+                continue;
+            }
             $item = [
                 'loc'     => $savedFilter->absoluteUrl,
                 'lastmod' => $this->lastModified($savedFilter),
@@ -332,11 +345,102 @@ class SitemapGenerator extends Component
     protected function brandItems()
     {
         foreach (ShopBrand::find()->each(200) as $brand) {
+            //Страница бренда без видимых товаров пустая — не включаем её в sitemap
+            if (!$this->isBrandListed($brand->id)) {
+                continue;
+            }
             yield [
                 'loc'     => $brand->absoluteUrl,
                 'lastmod' => $this->lastModified($brand),
             ];
         }
+    }
+
+    /**
+     * Есть ли у бренда товары, которые листинг бренда покажет по умолчанию: активные товары сайта
+     * (кроме дочерних предложений), а при настройке магазина «показывать только в наличии» —
+     * с остатком на складах магазина. Если определить не удалось, бренд не исключается.
+     *
+     * @param int $brandId
+     * @return bool
+     */
+    protected function isBrandListed($brandId)
+    {
+        $brandIds = $this->brandIdsWithVisibleProducts();
+        if ($brandIds === false) {
+            return true;
+        }
+
+        return isset($brandIds[(int) $brandId]);
+    }
+
+    /**
+     * @return array|false
+     */
+    protected function brandIdsWithVisibleProducts()
+    {
+        if ($this->_brandIdsWithVisibleProducts !== null) {
+            return $this->_brandIdsWithVisibleProducts;
+        }
+
+        $this->_brandIdsWithVisibleProducts = false;
+
+        if (!class_exists(ShopCmsContentElement::class) || !\Yii::$app->has('shop')) {
+            return $this->_brandIdsWithVisibleProducts;
+        }
+
+        try {
+            $query = ShopCmsContentElement::find()
+                ->cmsSite()
+                ->active()
+                ->innerJoinWith('shopProduct as shopProduct', false)
+                ->andWhere(['not', ['shopProduct.brand_id' => null]])
+                ->andWhere(['!=', 'shopProduct.product_type', ShopProduct::TYPE_OFFER])
+                ->select(['brand_id' => 'shopProduct.brand_id'])
+                ->distinct();
+
+            $shopSite = \Yii::$app->skeeks->site ? \Yii::$app->skeeks->site->shopSite : null;
+            $availability = $shopSite ? (int) $shopSite->is_show_product_only_quantity : 0;
+            if ($availability == 1 || $availability == 2) {
+                //Как AvailabilityFiltersHandler: остаток у товара или его предложений
+                //на складах магазина (1) или на складах магазина и поставщиков (2)
+                $storeIds = [];
+                foreach ((array) \Yii::$app->shop->stores as $store) {
+                    $storeIds[] = (int) $store->id;
+                }
+                if ($availability == 2) {
+                    foreach ((array) \Yii::$app->shop->supplierStores as $store) {
+                        $storeIds[] = (int) $store->id;
+                    }
+                }
+
+                $productStock = (new Query())
+                    ->from(['sitemapStock' => '{{%shop_store_product}}'])
+                    ->andWhere('sitemapStock.shop_product_id = shopProduct.id')
+                    ->andWhere(['sitemapStock.shop_store_id' => $storeIds])
+                    ->andWhere(['>', 'sitemapStock.quantity', 0]);
+
+                $offersStock = (new Query())
+                    ->from(['sitemapOfferStock' => '{{%shop_store_product}}'])
+                    ->innerJoin(['sitemapOffer' => '{{%shop_product}}'], 'sitemapOffer.id = sitemapOfferStock.shop_product_id')
+                    ->andWhere('sitemapOffer.offers_pid = shopProduct.id')
+                    ->andWhere(['sitemapOfferStock.shop_store_id' => $storeIds])
+                    ->andWhere(['>', 'sitemapOfferStock.quantity', 0]);
+
+                $query->andWhere(['or', ['exists', $productStock], ['exists', $offersStock]]);
+            }
+
+            $brandIds = [];
+            foreach ($query->column() as $brandId) {
+                $brandIds[(int) $brandId] = true;
+            }
+            $this->_brandIdsWithVisibleProducts = $brandIds;
+        } catch (\Throwable $e) {
+            \Yii::warning('Sitemap: не удалось определить бренды с товарами: '.$e->getMessage(), self::class);
+            $this->_brandIdsWithVisibleProducts = false;
+        }
+
+        return $this->_brandIdsWithVisibleProducts;
     }
 
     /**

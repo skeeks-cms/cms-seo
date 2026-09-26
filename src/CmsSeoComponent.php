@@ -1207,6 +1207,9 @@ HTML;
         'cms/content-element',
         'cms/saved-filter',
         'cms/cms',
+        //Страницы брендов и коллекций магазина тоже получают self-canonical
+        'shop/brand',
+        'shop/collection',
     ];
 
     public function _isTrigerEventCanUrl()
