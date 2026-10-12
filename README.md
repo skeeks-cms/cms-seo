@@ -68,6 +68,11 @@ Configuration app
 
 ```
 
+## Статическая карта сайта
+
+Для фоновой генерации используйте штатное задание `seo.sitemap.generate`.
+Публикация, хранение предыдущих версий и проверки описаны в [SITEMAP.md](SITEMAP.md).
+
 ___
 
 > [![skeeks!](https://skeeks.com/img/logo/logo-no-title-80px.png)](https://skeeks.com)  

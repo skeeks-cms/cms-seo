@@ -15,10 +15,19 @@ use skeeks\cms\job\exceptions\JobCancelledException;
 function check($ok, $message) { if (!$ok) { throw new RuntimeException($message); } }
 class FixtureSitemap extends SitemapGenerator
 {
+    public $urlCount = 5, $failPublicationAt = 0, $replacements = 0;
     protected function itemGroups() {
         yield 'fixture' => (function () {
-            for ($i = 0; $i < 5; $i++) { yield ['loc' => 'https://example.test/page-'.$i]; }
+            for ($i = 0; $i < $this->urlCount; $i++) { yield ['loc' => 'https://example.test/page-'.$i]; }
         })();
+    }
+    protected function replacePart($source, $destination) {
+        if (++$this->replacements === $this->failPublicationAt) {
+            throw new RuntimeException('Injected publication failure');
+        }
+        if (is_file($destination)) { check(simplexml_load_file($destination) !== false, 'Old live part is complete XML'); }
+        parent::replacePart($source, $destination);
+        check(simplexml_load_file($destination) !== false, 'Replacement is complete XML');
     }
     protected function publicUrl($path) { return 'https://example.test/'.$path; }
 }
@@ -63,13 +72,54 @@ try {
         throw new RuntimeException('Cancellation was ignored');
     } catch (JobCancelledException $expected) {}
     check(file_get_contents($temporary.'/sitemap.xml') === $original, 'Cancellation preserves published index');
-    check(count(glob($temporary.'/sitemaps/generated-*')) === 1, 'Cancelled generation removed');
+    check(!is_dir($temporary.'/sitemaps/.building'), 'Cancelled staging removed');
     $reporter->cancel = true;
     try { $handler->run(new JobContext(), $reporter); throw new RuntimeException('Pre-start cancellation ignored'); }
     catch (JobCancelledException $expected) {}
     $generator->generate(static function ($message) {});
-    check(count(glob($temporary.'/sitemaps/generated-*')) === 2, 'Legacy CLI callback supported');
-
+    $generator->generate();
+    check(count(glob($temporary.'/sitemaps/sitemap-*.xml')) === 3, 'Repeated runs reuse stable files');
+    check(count(glob($temporary.'/sitemaps/generated-*')) === 0, 'No public generation directories');
+    check(strpos(file_get_contents($temporary.'/sitemap.xml'), 'generated-') === false, 'Index has stable URLs');
+    $xml = new DOMDocument();
+    check($xml->loadXML($original), 'Original XML index valid');
+    foreach ($xml->getElementsByTagName('loc') as $loc) {
+        $path = $temporary.parse_url($loc->textContent, PHP_URL_PATH);
+        check(is_file($path) && simplexml_load_file($path) !== false, 'Original addresses survive repeated generation');
+    }
+    $generator->urlCount = 3;
+    $generator->generate();
+    check(substr_count(file_get_contents($temporary.'/sitemap.xml'), '<sitemap>') === 2, 'Index shrinks with data');
+    check(count(simplexml_load_file($temporary.'/sitemaps/sitemap-fixture-00003.xml')->children()) === 0, 'Removed part remains empty XML');
+    check(!is_dir($temporary.'/sitemaps/.building'), 'Successful staging removed');
+    $lastIndex = file_get_contents($temporary.'/sitemap.xml');
+    $generator->urlCount = 7;
+    $generator->replacements = 0;
+    $generator->failPublicationAt = 2;
+    try { $generator->generate(); throw new LogicException('Publication failure ignored'); }
+    catch (RuntimeException $expected) { check($expected->getMessage() === 'Injected publication failure', 'Expected publication failure'); }
+    check(file_get_contents($temporary.'/sitemap.xml') === $lastIndex, 'Part publication failure preserves index');
+    check(!is_dir($temporary.'/sitemaps/.building'), 'Failed publication staging removed');
+    foreach (glob($temporary.'/sitemaps/sitemap-*.xml') as $path) {
+        check(simplexml_load_file($path) !== false, 'Failure leaves complete live XML');
+    }
+    // Recover after a crash that left a partial build; old versioned paths are untouched.
+    mkdir($temporary.'/sitemaps/.building');
+    file_put_contents($temporary.'/sitemaps/.building/incomplete.xml', '<broken');
+    mkdir($temporary.'/sitemaps/generated-legacy');
+    file_put_contents($temporary.'/sitemaps/generated-legacy/keep.xml', '<urlset/>');
+    $generator->failPublicationAt = 0;
+    $generator->urlCount = 0;
+    $generator->generate();
+    check(substr_count(file_get_contents($temporary.'/sitemap.xml'), '<sitemap>') === 0, 'Empty current index');
+    foreach (glob($temporary.'/sitemaps/sitemap-*.xml') as $path) {
+        check(count(simplexml_load_file($path)->children()) === 0, 'Obsolete parts contain no stale URLs');
+    }
+    check(is_file($temporary.'/sitemaps/generated-legacy/keep.xml'), 'Legacy generations require separate migration');
+    check(!is_dir($temporary.'/sitemaps/.building'), 'Crash leftovers cleaned');
+    $generator->urlCount = 5;
+    $generator->generate();
+    check(substr_count(file_get_contents($temporary.'/sitemap.xml'), '<sitemap>') === 3, 'Parts can grow again');
     require __DIR__.'/../src/migrations/m260910_100000_native_seo_sitemap.php';
     $db = new yii\db\Connection(['dsn' => 'sqlite::memory:']);
     $db->open();

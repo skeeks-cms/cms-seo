@@ -1,5 +1,7 @@
 <?php
-require '/app/vendor/autoload.php';require '/app/vendor/yiisoft/yii2/Yii.php';
+require (getenv('SKEEKS_APP_ROOT') ?: '/app').'/vendor/autoload.php';
+require (getenv('SKEEKS_APP_ROOT') ?: '/app').'/vendor/yiisoft/yii2/Yii.php';
+require __DIR__.'/../src/sitemap/SitemapGenerator.php';
 new yii\console\Application(['id'=>'sitemap-url-test','basePath'=>__DIR__,'extensions'=>[],
 'components'=>['urlManager'=>['class'=>yii\web\UrlManager::class,'hostInfo'=>'https://fallback.test','baseUrl'=>'/shop'],
 'skeeks'=>new class extends yii\base\Component{public $site;} ]]);

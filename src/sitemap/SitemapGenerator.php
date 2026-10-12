@@ -10,6 +10,7 @@ namespace skeeks\cms\seo\sitemap;
 use skeeks\cms\models\CmsContentElement;
 use skeeks\cms\models\CmsSavedFilter;
 use skeeks\cms\models\CmsTree;
+use skeeks\cms\models\CmsTheme;
 use skeeks\cms\shop\models\ShopBrand;
 use skeeks\cms\shop\models\ShopCmsContentElement;
 use skeeks\cms\shop\models\ShopCollection;
@@ -43,6 +44,9 @@ class SitemapGenerator extends Component
      * @var string directory containing generated sitemap parts
      */
     public $partsDirectory = 'sitemaps';
+
+    /** @var bool|null null reads the active theme's stored secondary-category setting */
+    public $includeSecondaryTreeProducts;
 
     /**
      * @var array|false|null [brand_id => true] брендов с товарами, видимыми в листинге по умолчанию;
@@ -86,13 +90,20 @@ class SitemapGenerator extends Component
             throw new \RuntimeException('Another sitemap generation is already running.');
         }
 
-        $generation = 'generated-'.gmdate('YmdHis').'-'.getmypid().'-'.substr(md5(uniqid('', true)), 0, 8);
+        $generation = '.building';
         $partsRoot = FileHelper::normalizePath($webroot.DIRECTORY_SEPARATOR.$this->partsDirectory);
         $generationRoot = FileHelper::normalizePath($partsRoot.DIRECTORY_SEPARATOR.$generation);
         $rootFile = FileHelper::normalizePath($webroot.DIRECTORY_SEPARATOR.$this->rootFilename);
-        $published = false;
 
         try {
+            // This directory contains only incomplete output under the same generation lock.
+            // A process crash may leave it behind; no published index references it.
+            if (is_link($generationRoot)) {
+                throw new \RuntimeException('Sitemap staging directory must not be a symlink.');
+            }
+            if (is_dir($generationRoot)) {
+                FileHelper::removeDirectory($generationRoot);
+            }
             if (!FileHelper::createDirectory($generationRoot)) {
                 throw new \RuntimeException("Unable to create sitemap directory: {$generationRoot}");
             }
@@ -102,27 +113,24 @@ class SitemapGenerator extends Component
             if ($checkpoint) {
                 $checkpoint($result['urls']);
             }
+            $this->publishParts($generationRoot, $partsRoot);
             $this->publishRootFile($rootFile, $rootContent);
-            $published = true;
-
-            try {
-                $this->cleanupOldGenerations($partsRoot, $generation);
-            } catch (\Throwable $e) {
-                \Yii::warning($e, 'skeeks/seo/sitemap');
-            }
 
             $result['rootFile'] = $rootFile;
             unset($result['index']);
 
             return $result;
-        } catch (\Throwable $e) {
-            if (!$published && is_dir($generationRoot)) {
-                FileHelper::removeDirectory($generationRoot);
-            }
-            throw $e;
         } finally {
-            flock($lockHandle, LOCK_UN);
-            fclose($lockHandle);
+            try {
+                if (is_dir($generationRoot) && !is_link($generationRoot)) {
+                    FileHelper::removeDirectory($generationRoot);
+                }
+            } catch (\Throwable $e) {
+                \Yii::warning($e, 'skeeks/seo/sitemap');
+            } finally {
+                flock($lockHandle, LOCK_UN);
+                fclose($lockHandle);
+            }
         }
     }
 
@@ -166,7 +174,7 @@ class SitemapGenerator extends Component
                         $this->write($handle, "<!-- Created by Skeeks CMS -->\n");
                         $this->write($handle, "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
                         $index[] = [
-                            'loc'     => $this->publicUrl($this->partsDirectory.'/'.$generation.'/'.$filename),
+                            'loc'     => $this->publicUrl($this->partsDirectory.'/'.$filename),
                             'lastmod' => date('c'),
                         ];
 
@@ -226,7 +234,7 @@ class SitemapGenerator extends Component
      */
     protected function treeItems()
     {
-        $treeQuery = CmsTree::find()->cmsSite();
+        $treeQuery = CmsTree::find()->cmsSite()->active()->with('treeType');
         $treeQuery->andWhere([
             'and',
             ['redirect_tree_id' => null],
@@ -251,6 +259,9 @@ class SitemapGenerator extends Component
         }
 
         foreach ($treeQuery->orderBy(['level' => SORT_ASC, 'priority' => SORT_ASC])->each(200) as $tree) {
+            if (!$this->isTreeListed($tree)) {
+                continue;
+            }
             $item = [
                 'loc'     => $tree->absoluteUrl,
                 'lastmod' => $this->lastModified($tree),
@@ -267,10 +278,7 @@ class SitemapGenerator extends Component
      */
     protected function savedFilterItems()
     {
-        $savedFilterQuery = CmsSavedFilter::find()->cmsSite();
-        if (!\Yii::$app->seo->is_allow_index_adult_content) {
-            $savedFilterQuery->joinWith('cmsTree as cmsTree')->andWhere(['cmsTree.is_adult' => 0]);
-        }
+        $savedFilterQuery = $this->savedFilterQuery();
         foreach ($savedFilterQuery->each(200) as $savedFilter) {
             //Фильтр по бренду без видимых товаров отдаёт пустой листинг — не включаем его в sitemap
             if ($savedFilter->shop_brand_id && !$this->isBrandListed($savedFilter->shop_brand_id)) {
@@ -285,6 +293,17 @@ class SitemapGenerator extends Component
             }
             yield $item;
         }
+    }
+
+    protected function savedFilterQuery()
+    {
+        $savedFilterQuery = CmsSavedFilter::find()->cmsSite()
+            ->innerJoinWith('cmsTree as cmsTree')
+            ->andWhere(['cmsTree.is_index' => 1, 'cmsTree.active' => 'Y']);
+        if (!\Yii::$app->seo->is_allow_index_adult_content) {
+            $savedFilterQuery->andWhere(['cmsTree.is_adult' => 0]);
+        }
+        return $savedFilterQuery;
     }
 
     /**
@@ -399,36 +418,7 @@ class SitemapGenerator extends Component
                 ->select(['brand_id' => 'shopProduct.brand_id'])
                 ->distinct();
 
-            $shopSite = \Yii::$app->skeeks->site ? \Yii::$app->skeeks->site->shopSite : null;
-            $availability = $shopSite ? (int) $shopSite->is_show_product_only_quantity : 0;
-            if ($availability == 1 || $availability == 2) {
-                //Как AvailabilityFiltersHandler: остаток у товара или его предложений
-                //на складах магазина (1) или на складах магазина и поставщиков (2)
-                $storeIds = [];
-                foreach ((array) \Yii::$app->shop->stores as $store) {
-                    $storeIds[] = (int) $store->id;
-                }
-                if ($availability == 2) {
-                    foreach ((array) \Yii::$app->shop->supplierStores as $store) {
-                        $storeIds[] = (int) $store->id;
-                    }
-                }
-
-                $productStock = (new Query())
-                    ->from(['sitemapStock' => '{{%shop_store_product}}'])
-                    ->andWhere('sitemapStock.shop_product_id = shopProduct.id')
-                    ->andWhere(['sitemapStock.shop_store_id' => $storeIds])
-                    ->andWhere(['>', 'sitemapStock.quantity', 0]);
-
-                $offersStock = (new Query())
-                    ->from(['sitemapOfferStock' => '{{%shop_store_product}}'])
-                    ->innerJoin(['sitemapOffer' => '{{%shop_product}}'], 'sitemapOffer.id = sitemapOfferStock.shop_product_id')
-                    ->andWhere('sitemapOffer.offers_pid = shopProduct.id')
-                    ->andWhere(['sitemapOfferStock.shop_store_id' => $storeIds])
-                    ->andWhere(['>', 'sitemapOfferStock.quantity', 0]);
-
-                $query->andWhere(['or', ['exists', $productStock], ['exists', $offersStock]]);
-            }
+            $this->applyDefaultAvailability($query);
 
             $brandIds = [];
             foreach ($query->column() as $brandId) {
@@ -443,17 +433,103 @@ class SitemapGenerator extends Component
         return $this->_brandIdsWithVisibleProducts;
     }
 
+    /** Apply the storefront's default stock rule without reading a web session. */
+    protected function applyDefaultAvailability($query)
+    {
+        $shopSite = \Yii::$app->skeeks->site ? \Yii::$app->skeeks->site->shopSite : null;
+        $availability = $shopSite ? (int) $shopSite->is_show_product_only_quantity : 0;
+        if ($availability == 1 || $availability == 2) {
+            //Как AvailabilityFiltersHandler: остаток у товара или его предложений
+            //на складах магазина (1) или на складах магазина и поставщиков (2)
+            $storeIds = [];
+            foreach ((array) \Yii::$app->shop->stores as $store) {
+                $storeIds[] = (int) $store->id;
+            }
+            if ($availability == 2) {
+                foreach ((array) \Yii::$app->shop->supplierStores as $store) {
+                    $storeIds[] = (int) $store->id;
+                }
+            }
+
+            $productStock = (new Query())
+                ->from(['sitemapStock' => '{{%shop_store_product}}'])
+                ->andWhere('sitemapStock.shop_product_id = shopProduct.id')
+                ->andWhere(['sitemapStock.shop_store_id' => $storeIds])
+                ->andWhere(['>', 'sitemapStock.quantity', 0]);
+
+            $offersStock = (new Query())
+                ->from(['sitemapOfferStock' => '{{%shop_store_product}}'])
+                ->innerJoin(['sitemapOffer' => '{{%shop_product}}'], 'sitemapOffer.id = sitemapOfferStock.shop_product_id')
+                ->andWhere('sitemapOffer.offers_pid = shopProduct.id')
+                ->andWhere(['sitemapOfferStock.shop_store_id' => $storeIds])
+                ->andWhere(['>', 'sitemapOfferStock.quantity', 0]);
+
+            $query->andWhere(['or', ['exists', $productStock], ['exists', $offersStock]]);
+        }
+    }
+
+    /** The shop's catalog template declares empty sections noindex. */
+    protected function isTreeListed($tree)
+    {
+        if (!class_exists(ShopCmsContentElement::class) || !\Yii::$app->has('shop')) {
+            return true;
+        }
+        $type = $tree->treeType;
+        $view = $tree->view_file ?: ($type ? ($type->view_file ?: $type->code) : 'view');
+        if ($view !== 'catalog') {
+            return true;
+        }
+
+        $query = ShopCmsContentElement::find()->cmsSite()->active()
+            ->innerJoinWith('shopProduct as shopProduct', false)
+            ->andWhere(['!=', 'shopProduct.product_type', ShopProduct::TYPE_OFFER])
+            ->cmsTree($tree, true, $this->usesSecondaryTrees());
+        $this->applyDefaultAvailability($query);
+        return $query->exists();
+    }
+
+    /** Console jobs have no web theme; read only the required persisted setting. */
+    protected function usesSecondaryTrees()
+    {
+        if ($this->includeSecondaryTreeProducts === null) {
+            $theme = \Yii::$app->view->theme;
+            if ($theme && $theme->canGetProperty('is_join_second_trees')) {
+                $this->includeSecondaryTreeProducts = (bool) $theme->is_join_second_trees;
+            } else {
+                $row = CmsTheme::find()->cmsSite()->active()->asArray()->one();
+                $config = $row ? $row['config'] : [];
+                if (is_string($config)) {
+                    $config = @unserialize($config, ['allowed_classes' => false]);
+                }
+                $this->includeSecondaryTreeProducts = !empty($config['is_join_second_trees']);
+            }
+        }
+        return (bool) $this->includeSecondaryTreeProducts;
+    }
+
     /**
      * @return \Generator
      */
     protected function collectionItems()
     {
-        foreach (ShopCollection::find()->each(200) as $collection) {
+        foreach ($this->collectionQuery()->each(200) as $collection) {
             yield [
                 'loc'     => $collection->absoluteUrl,
                 'lastmod' => $this->lastModified($collection),
             ];
         }
+    }
+
+    protected function collectionQuery()
+    {
+        $products = ShopCmsContentElement::find()->cmsSite()->active()
+            ->innerJoinWith('shopProduct as shopProduct', false)
+            ->innerJoin(['sitemapCollectionProduct' => '{{%shop_product2collection}}'],
+                'sitemapCollectionProduct.shop_product_id = shopProduct.id')
+            ->select(['sitemapCollectionProduct.shop_collection_id']);
+        // Collections render active products, including offers, without the stock filter.
+        return ShopCollection::find()->andWhere(['is_active' => 1])
+            ->andWhere(['id' => $products]);
     }
 
     /**
@@ -550,33 +626,45 @@ class SitemapGenerator extends Component
         }
     }
 
-    /**
-     * Keeps the current and immediately preceding generation.
-     *
-     * @param string $partsRoot
-     * @param string $currentGeneration
-     */
-    protected function cleanupOldGenerations($partsRoot, $currentGeneration)
+    /** Publish complete XML files at stable addresses, then let generate() replace the index. */
+    protected function publishParts($stagingRoot, $partsRoot)
     {
-        $directories = [];
-        foreach ((array) glob($partsRoot.DIRECTORY_SEPARATOR.'generated-*', GLOB_ONLYDIR) as $directory) {
-            $directories[basename($directory)] = $directory;
+        $pending = [];
+        foreach ((array) glob($stagingRoot.DIRECTORY_SEPARATOR.'sitemap-*.xml') as $path) {
+            $pending[basename($path)] = $path;
         }
-        krsort($directories, SORT_STRING);
-
-        $keep = [$currentGeneration => true];
-        foreach ($directories as $name => $directory) {
-            if (isset($keep[$name])) {
+        // An old cached index can still reference a part removed from the new index.
+        // Keep that address available without continuing to advertise obsolete page URLs.
+        foreach ((array) glob($partsRoot.DIRECTORY_SEPARATOR.'sitemap-*.xml') as $path) {
+            $name = basename($path);
+            if (!preg_match('/^sitemap-[a-z0-9-]+-[0-9]{5}\.xml$/D', $name)) {
                 continue;
             }
-            if (count($keep) < 2) {
-                $keep[$name] = true;
-                continue;
+            if (is_link($path) || !is_file($path)) {
+                throw new \RuntimeException("Unsafe sitemap part: {$path}");
             }
-            FileHelper::removeDirectory($directory);
+            if (!isset($pending[$name])) {
+                $emptyPath = $stagingRoot.DIRECTORY_SEPARATOR.$name;
+                $empty = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                    ."<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"/>\n";
+                if (file_put_contents($emptyPath, $empty) === false) {
+                    throw new \RuntimeException("Unable to write empty sitemap part: {$emptyPath}");
+                }
+                $pending[$name] = $emptyPath;
+            }
+        }
+        foreach ($pending as $name => $path) {
+            $this->replacePart($path, $partsRoot.DIRECTORY_SEPARATOR.$name);
         }
     }
 
+    /** Never truncate a live XML or remove its old version before replacement. */
+    protected function replacePart($source, $destination)
+    {
+        if (is_link($destination) || !@rename($source, $destination)) {
+            throw new \RuntimeException("Unable to replace sitemap part: {$destination}");
+        }
+    }
     /**
      * @param string $relativePath
      * @return string
