@@ -13,6 +13,7 @@ class SelectionFixture extends SitemapGenerator
     public function collections() { return $this->collectionQuery()->select('id')->orderBy('id')->column(); }
     public function filters() { return $this->savedFilterQuery()->select('cms_saved_filter.id')->orderBy('cms_saved_filter.id')->column(); }
     public function listed($tree) { return $this->isTreeListed($tree); }
+    public function selection($filter) { return $this->isSavedFilterListed($filter); }
     public function secondary() { return $this->usesSecondaryTrees(); }
 }
 class TreeFixture extends CmsTree
@@ -40,8 +41,9 @@ Yii::$app->set('seo', new class extends yii\base\Component {
 });
 $db = Yii::$app->db;
 foreach ([
-    'cms_content_element' => 'id INTEGER PRIMARY KEY, cms_site_id INTEGER, active TEXT, tree_id INTEGER',
-    'shop_product' => 'id INTEGER PRIMARY KEY, cms_content_element_id INTEGER, product_type TEXT, offers_pid INTEGER',
+    'cms_content_element' => 'id INTEGER PRIMARY KEY, cms_site_id INTEGER, active TEXT, tree_id INTEGER, parent_content_element_id INTEGER',
+    'shop_product' => 'id INTEGER PRIMARY KEY, cms_content_element_id INTEGER, product_type TEXT, offers_pid INTEGER, brand_id INTEGER, country_alpha2 TEXT',
+    'cms_content_element_property' => 'element_id INTEGER, property_id INTEGER, value_enum INTEGER',
     'shop_collection' => 'id INTEGER PRIMARY KEY, is_active INTEGER',
     'shop_product2collection' => 'shop_product_id INTEGER, shop_collection_id INTEGER',
     'shop_store_product' => 'shop_product_id INTEGER, shop_store_id INTEGER, quantity REAL',
@@ -102,4 +104,42 @@ $db->createCommand()->update('cms_tree', ['is_index'=>0], ['id'=>20])->execute()
 $db->createCommand()->update('cms_tree', ['active'=>'N'], ['id'=>30])->execute();
 $db->createCommand()->update('cms_tree', ['is_adult'=>1], ['id'=>40])->execute();
 check(array_map('intval', $generator->filters()) === [10], 'Saved filters respect parent noindex, activity and adult restrictions');
+
+function selection($tree, $attributes = []) {
+    return (object) array_merge(['cmsTree'=>$tree, 'shop_brand_id'=>null, 'country_alpha2'=>null,
+        'cms_content_property_id'=>null, 'value_content_property_enum_id'=>null,
+        'value_content_element_id'=>null], $attributes);
+}
+$shopSite->is_show_product_only_quantity = 0;
+$db->createCommand()->update('shop_product', ['brand_id'=>7, 'country_alpha2'=>'RU'], ['id'=>1])->execute();
+$db->createCommand()->update('shop_product', ['brand_id'=>8, 'country_alpha2'=>'IT'], ['id'=>5])->execute();
+check($generator->selection(selection(tree(10), ['shop_brand_id'=>7])), 'Brand with a single category product retained');
+check(!$generator->selection(selection(tree(40), ['shop_brand_id'=>7])), 'Brand available elsewhere does not populate this category');
+check(!$generator->selection(selection(tree(20), ['shop_brand_id'=>7])), 'Inactive or foreign-site products do not populate a selection');
+check($generator->selection(selection(tree(20, 'catalog', [10]), ['shop_brand_id'=>7])), 'Selection includes descendants');
+check(!$generator->selection(selection(tree(50), ['shop_brand_id'=>7])), 'Selection ignores secondary binding when disabled');
+check($withSecondary->selection(selection(tree(50), ['shop_brand_id'=>7])), 'Selection includes enabled secondary binding');
+check($generator->selection(selection(tree(10), ['country_alpha2'=>'RU'])), 'Matching country retained');
+check(!$generator->selection(selection(tree(10), ['country_alpha2'=>'IT'])), 'Country available in another category excluded');
+$db->createCommand()->insert('cms_content_element_property', ['element_id'=>1, 'property_id'=>100, 'value_enum'=>200])->execute();
+check($generator->selection(selection(tree(10), ['cms_content_property_id'=>100, 'value_content_property_enum_id'=>200])), 'Matching enum retained');
+check(!$generator->selection(selection(tree(10), ['cms_content_property_id'=>101, 'value_content_property_enum_id'=>200])), 'Same value on another property does not match');
+check(!$generator->selection(selection(tree(10), ['cms_content_property_id'=>100, 'value_content_property_enum_id'=>201])), 'Empty enum selection excluded');
+check(!$generator->selection(selection(tree(40), ['cms_content_property_id'=>100, 'value_content_property_enum_id'=>200])), 'Property in another category does not match');
+$db->createCommand()->insert('cms_content_element', ['id'=>6,'cms_site_id'=>1,'active'=>'Y','tree_id'=>10,'parent_content_element_id'=>1])->execute();
+$db->createCommand()->insert('cms_content_element_property', ['element_id'=>6,'property_id'=>102,'value_enum'=>300])->execute();
+check($generator->selection(selection(tree(10), ['cms_content_property_id'=>102, 'value_content_element_id'=>300])), 'Element selector on a child retains its parent like storefront EAV');
+check(!$generator->selection(selection(tree(10), ['cms_content_property_id'=>102, 'value_content_element_id'=>301])), 'Empty element selector excluded');
+$shopSite->is_show_product_only_quantity = 1;
+$db->createCommand()->delete('shop_store_product', ['shop_store_id'=>1])->execute();
+check(!$generator->selection(selection(tree(10), ['shop_brand_id'=>7])), 'Out-of-stock brand selection excluded');
+check(!$generator->selection(selection(tree(10), ['cms_content_property_id'=>100, 'value_content_property_enum_id'=>200])), 'Out-of-stock property selection excluded');
+$db->createCommand()->insert('shop_store_product', ['shop_product_id'=>4,'shop_store_id'=>1,'quantity'=>1])->execute();
+check($generator->selection(selection(tree(10), ['shop_brand_id'=>7])), 'Offer stock retains brand selection');
+check($generator->selection(selection(tree(10), ['cms_content_property_id'=>100, 'value_content_property_enum_id'=>200])), 'Offer stock retains property selection');
+check(!$generator->selection(selection(tree(40), ['shop_brand_id'=>8])), 'Supplier stock ignored in site-only selection');
+$shopSite->is_show_product_only_quantity = 2;
+check($generator->selection(selection(tree(40), ['shop_brand_id'=>8])), 'Supplier stock retains selection in mode 2');
+check($generator->selection(selection(tree(20, 'text'), ['shop_brand_id'=>7])), 'Custom non-catalog views retained');
+check($generator->selection(selection(tree(10), ['cms_content_property_id'=>100])), 'Unknown property selectors retained conservatively');
 echo "Sitemap selection checks passed.\n";

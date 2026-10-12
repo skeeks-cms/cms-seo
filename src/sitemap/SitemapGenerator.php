@@ -279,9 +279,8 @@ class SitemapGenerator extends Component
     protected function savedFilterItems()
     {
         $savedFilterQuery = $this->savedFilterQuery();
-        foreach ($savedFilterQuery->each(200) as $savedFilter) {
-            //Фильтр по бренду без видимых товаров отдаёт пустой листинг — не включаем его в sitemap
-            if ($savedFilter->shop_brand_id && !$this->isBrandListed($savedFilter->shop_brand_id)) {
+        foreach ($savedFilterQuery->with('cmsTree.treeType')->each(200) as $savedFilter) {
+            if (!$this->isSavedFilterListed($savedFilter)) {
                 continue;
             }
             $item = [
@@ -304,6 +303,50 @@ class SitemapGenerator extends Component
             $savedFilterQuery->andWhere(['cmsTree.is_adult' => 0]);
         }
         return $savedFilterQuery;
+    }
+
+    /** Test the saved selection itself, not the brand across the whole site. */
+    protected function isSavedFilterListed($filter)
+    {
+        if (!class_exists(ShopCmsContentElement::class) || !\Yii::$app->has('shop')) {
+            return true;
+        }
+        $tree = $filter->cmsTree;
+        if (!$tree) {
+            return false;
+        }
+        $type = $tree->treeType;
+        $view = $tree->view_file ?: ($type ? ($type->view_file ?: $type->code) : 'view');
+        if ($view !== 'catalog') {
+            return true;
+        }
+
+        $query = $this->catalogProductsQuery($tree);
+        if ($filter->shop_brand_id) {
+            $query->andWhere(['shopProduct.brand_id' => $filter->shop_brand_id]);
+        }
+        if ($filter->country_alpha2) {
+            $query->andWhere(['shopProduct.country_alpha2' => $filter->country_alpha2]);
+        }
+        if ($filter->cms_content_property_id) {
+            $value = $filter->value_content_property_enum_id ?: $filter->value_content_element_id;
+            if (!$value) {
+                // Unknown selectors must not silently remove a public page.
+                return true;
+            }
+            // Same value_enum predicate and child relation as ShopEavQueryFilterHandler.
+            $matches = (new Query())->select('element_id')
+                ->from('{{%cms_content_element_property}}')
+                ->where(['property_id' => $filter->cms_content_property_id, 'value_enum' => $value]);
+            $children = (new Query())->select('parent_content_element_id')
+                ->from('{{%cms_content_element}}')
+                ->where(['id' => $matches]);
+            $query->andWhere(['or',
+                ['in', CmsContentElement::tableName().'.id', $matches],
+                ['in', CmsContentElement::tableName().'.id', $children],
+            ]);
+        }
+        return $query->exists();
     }
 
     /**
@@ -480,12 +523,18 @@ class SitemapGenerator extends Component
             return true;
         }
 
+        return $this->catalogProductsQuery($tree)->exists();
+    }
+
+    /** Default catalog query shared by category and saved-selection checks. */
+    protected function catalogProductsQuery($tree)
+    {
         $query = ShopCmsContentElement::find()->cmsSite()->active()
             ->innerJoinWith('shopProduct as shopProduct', false)
             ->andWhere(['!=', 'shopProduct.product_type', ShopProduct::TYPE_OFFER])
             ->cmsTree($tree, true, $this->usesSecondaryTrees());
         $this->applyDefaultAvailability($query);
-        return $query->exists();
+        return $query;
     }
 
     /** Console jobs have no web theme; read only the required persisted setting. */
