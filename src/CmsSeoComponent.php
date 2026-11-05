@@ -797,6 +797,10 @@ HTML
                     $this->setUtms($utms);
                 }
             }
+
+            //Переход без меток (поисковик, карты, каталог): запоминаем первую внешнюю страницу визита,
+            //если меток ещё нет — по ней CRM определяет «Откуда узнали» у заявки с сайта.
+            $this->_rememberFirstReferrer();
         });
 
 
@@ -1056,6 +1060,35 @@ HTML;
         }
 
         return false;
+    }
+
+    /**
+     * Первая внешняя страница визита без меток (sx_first_referrer): только обычный GET-запрос страницы, только
+     * с другого сайта и только пока в сессии нет меток — метки и их переход важнее, повторный заход их не стирает.
+     */
+    protected function _rememberFirstReferrer()
+    {
+        try {
+            $request = \Yii::$app->request;
+            if (!$request instanceof \yii\web\Request || !$request->isGet || $request->isAjax || !\Yii::$app->has('session')) {
+                return;
+            }
+            $referrer = trim((string)$request->referrer);
+            if ($referrer === '' || !preg_match('~^https?://~i', $referrer) || mb_strlen($referrer) > 2000) {
+                return;
+            }
+            $strip = static fn($host) => preg_replace('/^www\./', '', mb_strtolower((string)$host));
+            $host = $strip(parse_url($referrer, PHP_URL_HOST));
+            if ($host === '' || $host === $strip($request->hostName)) {
+                return;
+            }
+            if ($this->getUtms()) {
+                return;
+            }
+            $this->setUtms(['sx_first_referrer' => $referrer]);
+        } catch (\Throwable $e) {
+            \Yii::warning('Первый переход визита не запомнен: '.$e->getMessage(), self::class);
+        }
     }
 
     /**
